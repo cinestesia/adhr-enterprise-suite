@@ -1,0 +1,50 @@
+# --- Gestione Pacchetti & Runtime ---
+node_modules
+.pnpm-debug.log
+.npm
+/dist
+/build
+/.next
+/out
+
+# --- Turborepo ---
+.turbo
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+# --- Variabili d'Ambiente (CRITICO) ---
+# Non committare mai i segreti!
+.env
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# --- Test & Qualità ---
+/coverage
+/.eslintcache
+/.stylelintcache
+.prettiercache
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Docker ---
+.docker/
+# Escludi file di log di docker se presenti
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Helm ---
+# Se usi pacchetti helm locali o grafici generati
+/charts/*.tgz
+/charts/charts/

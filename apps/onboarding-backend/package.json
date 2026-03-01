@@ -1,0 +1,33 @@
+{
+    "name": "@adhr/onboarding-backend",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test":"NODE_ENV=test vitest",
+        "dev": "NODE_ENV=development tsx watch src/app.ts",
+        "build": "tsc",
+        "start": "NODE_ENV=production node dist/app.js",
+        "lint": "eslint src"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.30.1",
+    "dependencies": {
+        "@fastify/autoload": "^6.3.1",
+        "@fastify/cors": "^11.2.0",
+        "@fastify/env": "^5.0.3",
+        "@fastify/sensible": "^6.0.4",
+        "@fastify/swagger": "^9.7.0",
+        "@fastify/swagger-ui": "^5.2.5",
+        "@sinclair/typebox": "^0.34.48",
+        "fastify": "^5.7.4",
+        "fastify-plugin": "^5.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.33",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    }
+}

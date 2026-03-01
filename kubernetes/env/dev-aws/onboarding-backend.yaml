@@ -1,0 +1,14 @@
+# env/local.yaml
+image:
+  repository: 725494707422.dkr.ecr.eu-central-1.amazonaws.com/onboarding-backend
+  tag: dev-a1b2c3d # (il tag specifico del commit)
+  
+  
+  # Attenzione: in AWS, la pullPolicy dovrebbe essere Always, 
+  # perché se per errore pushi un'immagine corretta sopra una sbagliata 
+  # con lo stesso tag, Always ti salva la vita scaricando quella nuova. 
+  # IfNotPresent invece terrebbe quella vecchia "incastrata" nel nodo del cluster.  
+  pullPolicy: Always
+
+service:
+  port: 3001

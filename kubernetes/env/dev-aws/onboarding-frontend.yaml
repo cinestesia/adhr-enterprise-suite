@@ -1,0 +1,12 @@
+replicaCount: 1 # O metti 0 se vuoi "spegnerlo"
+image:
+    repository: 725494707422..dkr.ecr.eu-central-1.amazonaws.com/onboarding-frontend
+    tag: 'dev-a1b2c3d' # (il tag specifico del commit)
+service:
+    port: 3000
+resources:
+    requests:
+        cpu: 50m
+        memory: 128Mi
+ingress:
+    host: dev.onboarding.tuosito.it

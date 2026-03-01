@@ -1,0 +1,8 @@
+# env/local.yaml
+image:
+  repository: onboarding-frontend 
+  tag: "latest"
+  pullPolicy: IfNotPresent 
+
+service:
+  port: 3000

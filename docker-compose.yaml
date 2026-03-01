@@ -1,0 +1,21 @@
+services:
+  onboarding-frontend:
+    build:
+      context: .
+      dockerfile: apps/onboarding-frontend/Dockerfile
+      args:
+        # Docker Compose legge queste variabili dal file .env e le passa al Dockerfile
+        - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
+        - NEXT_PUBLIC_DATABASE_URL=${NEXT_PUBLIC_DATABASE_URL}
+        - NODE_ENV=${NODE_ENV}
+        - SERVER_ONLY_VAR=${SERVER_ONLY_VAR}
+    image: onboarding-frontend:latest
+    container_name: onboarding-frontend
+    ports:
+      - "3000:3000"
+    # Carica le variabili anche per il RUNTIME (Stage 4)
+    env_file:
+      - ./apps/onboarding-frontend/.env.development.local
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000

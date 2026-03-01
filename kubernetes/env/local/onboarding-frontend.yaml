@@ -1,0 +1,13 @@
+# env/local.yaml
+image:
+  repository: onboarding-frontend 
+  tag: "dev-latest"
+  pullPolicy: IfNotPresent 
+
+service:
+  port: 3000
+
+config:
+  # In locale su Minikube, il frontend (se fa SSR) parla al backend 
+  # usando il nome del Service Kubernetes
+  backendUrl: "http://onboarding-backend"
