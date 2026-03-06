@@ -1,0 +1,20 @@
+image:
+  repository: <il-tuo-account>/welcome-frontend
+  tag: "1.0.0"
+  pullPolicy: Always
+
+service:
+  port: 3000
+
+config:
+  # ATTENZIONE: Se il frontend è una SPA (React/Vue/Angular), 
+  # deve parlare al backend tramite l'URL PUBBLICO (l'host dell'ingress backend)
+  backendUrl: "http://api.adhr-suite.it" 
+
+ingress:
+  enabled: true
+  host: "app.adhr-suite.it" # <== Il dominio del frontend
+
+env: production-dev
+ambiente: azure
+replicaCount: 1

@@ -1,0 +1,21 @@
+image:
+  repository: <il-tuo-account>/welcome-backend # <== CAMBIARE CON REGISTRY REALE
+  tag: "1.0.0"
+  pullPolicy: Always # In cloud meglio Always per essere sicuri di avere l'ultima build
+
+service:
+  port: 3001
+
+ingress:
+  enabled: true
+  host: "api.adhr-suite.it" # <== Qui metterai il tuo dominio o l'IP di Azure
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # Se userai HTTPS in futuro (cert-manager), aggiungerai qui le annotations
+
+config:
+  databaseUrl: "connessione-al-db-azure" # Qui metterai la stringa per un DB reale (es. Azure SQL o Postgres)
+
+env: production-dev
+ambiente: azure
+replicaCount: 1

@@ -365,8 +365,8 @@ una volta avviato minikube dobbiamo creare il build delle immagini:
 docker system prune -a --volumes
 
 # Build Backend
-docker build -t onboarding-backend:dev -f apps/onboarding-backend/Dockerfile .
+docker build -t welcome-backend:dev -f apps/welcome-backend/Dockerfile .
 
 # Build Frontend
-docker build -t onboarding-frontend:dev -f apps/onboarding-frontend/Dockerfile .
+docker build -t welcome-frontend:dev -f apps/welcome-frontend/Dockerfile .
 ``` 

@@ -1,0 +1,19 @@
+replicaCount: 3
+image:
+    repository: 725494707422.dkr.ecr.eu-central-1.amazonaws.com/welcome-frontend
+    tag: 'v1.0.0' # In prod usa tag specifici sem vers. 
+service:
+    port: 3000
+resources:
+    requests:
+        cpu: 200m
+        memory: 512Mi
+    limits:
+        cpu: 500m
+        memory: 1Gi
+ingress:
+    host: app.welcome.tuosito.it
+config:
+  # In produzione, se il frontend gira nel browser dell'utente, 
+  # dovrà parlare all'indirizzo pubblico dell'Ingress
+  backendUrl: "https://api.welcome.tuosito.it"

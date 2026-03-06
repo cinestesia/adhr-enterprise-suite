@@ -1,0 +1,15 @@
+replicaCount: 3
+image:
+    repository: 725494707422.dkr.ecr.eu-central-1.amazonaws.com/welcome-backend
+    tag: 'v1.0.0' # In prod usa tag specifici sem vers. 
+service:
+    port: 3001
+resources:
+    requests:
+        cpu: 200m
+        memory: 512Mi
+    limits:
+        cpu: 500m
+        memory: 1Gi
+ingress:
+    host: app.welcome.tuosito.it

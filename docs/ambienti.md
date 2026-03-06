@@ -6,15 +6,76 @@ Turbo: È solo un "passacarte". Vede che vuoi lanciare un comando e gli passa le
 
 Fastify (@fastify/env): È il "controllore". Prende le variabili che gli arrivano, le valida e, se glielo chiedi, va a leggere i file .env.
 
-# File ambientali
-Dentro apps/onboarding-backend/, creo i file necessari. Importante: i nomi devono essere coerenti.
+Tutto questo chiaramente funziona nell'ipotesti che i file ambientali siano presenti dentro la macchina dove gira il servizio, ad esempio fastify. 
 
-.env.development    => DATABASE_URL=postgres://localhost:5432/dev
-.env.test           => DATABASE_URL=postgres://localhost:5432/test
-.env.production     => DATABASE_URL=postgres://real-db-server:5432/prod
+Nei casi in cui tale servizio giri dentro un container come docker non è un best practice copiare li dentro i file .env che potrebbero contenere dei dati sensibili. Come si fa allora in questi casi a passare le variabili ambientali. 
 
+In generale quello che accade con le variabili ambientali ad esempio con fastify, è che fastify con dotenv prova a caricare queste variabili da file ambientali in process. 
 
-# Ambienti in next.js
+Quindi l'idea è che le passiamo noi queste variabili al container, durante il running. Ci sono vari modi per farlo, ma di sicuro con docker compose è meglio. 
+
+Ad esempio per il frontend con il seguente docker compose :
+
+ ```yaml
+services:
+  welcome-frontend:
+    build:
+      context: .
+      dockerfile: apps/welcome-frontend/Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
+        NEXT_PUBLIC_ENVIRONMENT: ${NEXT_PUBLIC_ENVIRONMENT}
+        NEXT_PUBLIC_DATABASE_URL: ${NEXT_PUBLIC_DATABASE_URL}
+        SERVER_ONLY_VAR: ${SERVER_ONLY_VAR}
+
+    image: welcome-frontend:latest
+    container_name: welcome-frontend
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - ./apps/welcome-frontend/${ENV_FILE}
+
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+``` 
+possiamo dare il comando: 
+
+```bash
+  docker compose --env-file .env.test up --build
+```
+oppure: 
+
+```bash 
+  docker compose --env-file .env.production up --build
+```
+
+i file ambientali quindi non vanno messi ne dentro il repository ne dentro il container. Vanno dunque inseriti anche in .gitignore . Per esempio:
+
+```gitignore
+
+# Esclude il file locale (quello con i tuoi segreti personali) .env.local
+# Esclude tutti i file env specifici per ambiente se contengono segreti
+.env.development
+.env.test
+.env.production
+
+#Se vuoi essere super sicuro ed escludere TUTTI i file .env 
+#.env
+#.env*.local
+
+```
+possiamo però nettere nel repository un esempio. Possiamo inserire env.example per indicare quali variabili ambientali passare
+
+```bash
+  NODE_ENV= 
+  PORT=
+  LOG_LEVEL=
+  DATABASE_URL=
+```
+
+# Come Next gestisce gli ambienti
 Quando siamo in sviluppo, con il comando:
 
 ```json
@@ -45,6 +106,7 @@ La Scala di Priorità in Produzione:
 
 in questo caso devi prestare attenzione a come vengono lette le variabili. 
 Se nel tuo .env.production hai NEXT_PUBLIC_API_URL=https://api.pro.it, quando fai la build, Next.js scrive quell'indirizzo ovunque nel codice JavaScript.
+
 Se dopo la build cambi il file .env.production e lanci next start, il browser continuerà a puntare al vecchio indirizzo! Per aggiornare le variabili NEXT_PUBLIC_ devi rifare la build.
 
 Le variabili senza prefisso (es. DATABASE_URL) vengono invece lette ogni volta che l'app parte o quando una rotta API viene chiamata.
@@ -52,68 +114,82 @@ Le variabili senza prefisso (es. DATABASE_URL) vengono invece lette ogni volta c
 Se cambi DATABASE_URL nel file .env.production e riavvii con next start, l'app userà immediatamente il nuovo database senza bisogno di rifare la build.
 
 analogamente con 
+
 ```bash 
-next build
+  next build
+```
+la scaletta è quella di produzione.
+
+# Nextjs dentro un container docker 
+Quando siamo dentro un container docker il best practice è : 
+
+1.  Utilizzare docker compose per passare le variabili ambientali. In questo modo le passiamo al runtime o al 
+    build time. Per esempio per passare le variabili ambientali PUBBLICHE cioè che non contengono i secret per inserirle inline ed utilizzarle lato client possiamo passare ad esempio allo step build: 
+
+```bash
+  docker compose --env-file apps/welcome-frontend/.env.production build --no-cache welcome-frontend
+```
+se in docker-compose.yaml abbiamo: 
+
+```yaml
+    build:
+      context: .
+      dockerfile: apps/welcome-frontend/Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
+        NEXT_PUBLIC_NODE_ENV: ${NEXT_PUBLIC_NODE_ENV:-}
+        NEXT_PUBLIC_PORT: ${NEXT_PUBLIC_PORT:-}
+        NEXT_PUBLIC_DATABASE_URL: ${NEXT_PUBLIC_DATABASE_URL:-}
+        NEXT_PUBLIC_LOG_LEVEL: ${NEXT_PUBLIC_LOG_LEVEL:-}
 ```
 
-la scaletta è quella di produzione.
-Le variabili NEXT_PUBLIC_ (Iniezione "Hardcoded")
-Next.js scansiona tutto il tuo codice del frontend (i componenti React). Ogni volta che trova process.env.NEXT_PUBLIC_API_URL, sostituisce letteralmente quella scritta con il valore trovato nei file .env.
-
-Risultato: Se nel file c'è http://api.prod, nel file .js finale che scaricherà l'utente ci sarà scritto http://api.prod.
-
-Perché? Perché il browser dell'utente non ha accesso ai tuoi file .env o al tuo server; deve avere l'indirizzo già scritto dentro il codice.
-
-B. Le variabili senza prefisso (Referenza "Runtime")
-Next.js legge anche queste (es. DATABASE_URL), ma non le scrive nei file del browser per motivi di sicurezza.
-
-Le usa solo se hai del codice che viene eseguito durante la build (ad esempio dentro getStaticProps per andare a prendere i dati dal database e generare le pagine HTML statiche).
-
-Se queste variabili cambiano dopo la build, il server le leggerà aggiornate al prossimo next start, ma il browser non le vedrà mai. 
-
-Però cosa facciamo quando creiamo dei container. Non possiamo copiare i file .env dentro il container con ad esempio il comando:
+=> andrà a passare le variabili nel file .env.production dentro come ARG nel DockerFile nello step build
 
 ```Dockerfile
-  COPY --from=builder /app/apps/onboarding-frontend/.env.* ./
+  ARG NEXT_PUBLIC_NODE_ENV
+  ARG NEXT_PUBLIC_PORT
+  ARG NEXT_PUBLIC_LOG_LEVEL
+  ARG NEXT_PUBLIC_DATABASE_URL
 ```
-è considerato un bad practice. I file finiranno dentro l'immagine docker. Chiunque abbia accesso al registro delle immagini ( Docker, AWS ECR ecc.. ) può scaricare l'immagine e fare docker history oppure o entrare nel container e leggere le tue password del database o le chiavi API in chiaro. 
 
-Quindi quando buildiamo i container :
+questi argomenti verranno quindi passati come ENV: 
 
-1.  Variabili Server: Passale tramite ENV nel comando docker run (Runtime).
+```DockerFile
+  ENV NEXT_PUBLIC_NODE_ENV=${NEXT_PUBLIC_NODE_ENV}
+  ENV NEXT_PUBLIC_PORT=${NEXT_PUBLIC_PORT}
+  ENV NEXT_PUBLIC_LOG_LEVEL=${NEXT_PUBLIC_LOG_LEVEL}
+  ENV NEXT_PUBLIC_DATABASE_URL=${NEXT_PUBLIC_DATABASE_URL}
+```
 
-2.  Variabili Client (NEXT_PUBLIC_): Passale tramite --build-arg nel comando docker
-    build (Build-time).
+in questo modo saranno disponibili durante il build time e iniettate durante la compilazione dei componenti.  
 
+2. Per le variabili ambientali lato server che possono contenere secret il disocrso è leggermente diverso. Non vogliamo che compaiano da nessuna parte in docker , quindi le passiamo direttamente come variabili ambientali al run time. Quindi diamo il comando:
 
-# .gitignore
+```bash
+  docker compose --env-file apps/welcome-frontend/.env.production up -d welcome-frontend 
+```
+e se nel docker-compose.yaml abbiamo messo
 
-Esclude il file locale (quello con i tuoi segreti personali) .env.local
-Esclude tutti i file env specifici per ambiente se contengono segreti
+```yaml
+  # Per fare in modo che il compoenente legga i dati al runtime li mettiamo qui 
+  environment:
+    NODE_ENV: ${NODE_ENV}
+    PORT: ${PORT}
+    LOG_LEVEL: ${LOG_LEVEL}
+    DATABASE_URL: ${DATABASE_URL}
+```
+verranno passate al docker file come ambiente direttamente senza fare nulla a livello di DockerFile. Quindi in sintesi e ricapitolando: 
 
-.env.development.local
-.env.test.local
-.env.production.local
+1. Variabili Client-Side (NEXT_PUBLIC_*) - Build Time
+Il tuo approccio è corretto. Poiché queste variabili vengono iniettate nel codice statico, devono essere presenti quando esegui npm run build dentro il Dockerfile.
 
-Se vuoi essere super sicuro ed escludere TUTTI i file .env 
-.env
-.env*.local
+Il flusso: .env file → Docker Compose (args) → Dockerfile (ARG) → Dockerfile (ENV) → Next Build.
 
+Perché è corretto: Senza il passaggio finale ENV NEXT_PUBLIC_...=${NEXT_PUBLIC_...} nel Dockerfile, il processo di build di Next.js non vedrebbe le variabili definite come ARG.
 
-# .env.example (Questo va su GIT)
+2. Variabili Server-Side (Secret) - Runtime
+Anche qui, la logica è impeccabile. Le variabili server-side (senza prefisso public) vengono lette da Node.js a runtime.
 
-API URL per il frontend (necessita del prefisso) iniettate durante il build time
-NEXT_PUBLIC_API_URL=
+Il flusso: .env file → Docker Compose (environment) → Container OS.
 
-Configurazione Database (solo lato server) passate solo lato server
-DATABASE_URL=
-DB_PASSWORD=
-
-Chiavi esterne
-STRIPE_SECRET_KEY=
-
-# .env.production
-NEXT_PUBLIC_API_URL=https://api.onboarding.it
-DATABASE_URL=mongodb://user:password@atlas-shard:27017/prod-db
-NODE_ENV=production
-
+Perché è corretto: Non c'è bisogno di dichiararle nel Dockerfile. Questo rende l'immagine Docker portabile: puoi usare la stessa immagine in stage e in production cambiando solo le variabili d'ambiente al momento del lancio (up).

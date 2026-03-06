@@ -1,6 +1,6 @@
 # env/local.yaml
 image:
-  repository: onboarding-frontend 
+  repository: welcome-frontend 
   tag: "latest"
   pullPolicy: IfNotPresent 
 

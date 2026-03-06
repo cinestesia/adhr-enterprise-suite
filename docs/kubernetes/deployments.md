@@ -23,30 +23,30 @@ Per esempio:
 ```
 
 NAME READY STATUS RESTARTS AGE
-onboarding-frontend-696b5d8f8-abc12 1/1 Running 0 5m
-onboarding-frontend-696b5d8f8-xyz34 1/1 Running 0 5m
-onboarding-frontend-7b4c9e1a2-dfg56 1/1 Running 0 2m
-onboarding-backend-55d4c8f74-pqr78 2/2 Running 0 10m
-onboarding-backend-55d4c8f74-lmn90 2/2 Running 0 10m
+welcome-frontend-696b5d8f8-abc12 1/1 Running 0 5m
+welcome-frontend-696b5d8f8-xyz34 1/1 Running 0 5m
+welcome-frontend-7b4c9e1a2-dfg56 1/1 Running 0 2m
+welcome-backend-55d4c8f74-pqr78 2/2 Running 0 10m
+welcome-backend-55d4c8f74-lmn90 2/2 Running 0 10m
 db-postgresql-0 1/1 Running 0 1d
 
 per esempio qui vediamo i primi due pod:
 
-onboarding-frontend-696b5d8f8-abc12
-onboarding-frontend-696b5d8f8-xyz34
+welcome-frontend-696b5d8f8-abc12
+welcome-frontend-696b5d8f8-xyz34
 
 Repliche dello stesso componente (Scaling): la prima parte del nome è identica. Il Deployment ha creato un ReplicaSet (identificato dal suffisso 696b5d8f8) che ha generato due "operai" identici. L'ultima stringa (abc12, xyz34) è un hash casuale per garantire che ogni Pod abbia un nome univoco e il suo IP nella rete flat.
 
 il terzo pod:
 
-onboarding-frontend-7b4c9e1a2-dfg56
+welcome-frontend-7b4c9e1a2-dfg56
 
 Questo ha un hash centrale diverso (7b4c9e1a2). Probabilmente hai appena fatto un aggiornamento (es. passato dalla v1 alla v2). Kubernetes sta facendo girare la nuova versione accanto alla vecchia per testarne la stabilità prima di spegnere quelle precedenti.
 
 Poi vediamo Il Pattern Sidecar (Più container nel Pod)
 Guardiamo i Pod del backend:
 
-onboarding-backend-... -> READY 2/2 Qui vedi 2/2. Significa che dentro quel singolo Pod "abitano" due container.
+welcome-backend-... -> READY 2/2 Qui vedi 2/2. Significa che dentro quel singolo Pod "abitano" due container.
 
 Il primo è la tua app Node.js/Python (il Main Container).
 
@@ -57,7 +57,7 @@ Come Kubernetes organizza questo caos? qui entrano all'opera le labels.
 
 Per Release: kubectl get pods -l release=v2.0 -> Vedresti solo il terzo Pod.
 
-Per Componente: kubectl get pods -l app=onboarding-frontend -> Vedresti i primi tre Pod.
+Per Componente: kubectl get pods -l app=welcome-frontend -> Vedresti i primi tre Pod.
 
 Per Ambiente: kubectl get pods -l env=prod -> Vedresti tutto ciò che è produzione.
 
@@ -69,10 +69,10 @@ Esempio:
 # Consideriamo sempre il comando:
 # Esempio per l'ambiente dev
 
-# helm install onboarding-frontend ./charts/adhr-enterprise-suite \
+# helm install welcome-frontend ./charts/adhr-enterprise-suite \
 # -n dev-namespace \
 # --create-namespace \
-# -f env/dev/onboarding-frontend.yaml
+# -f env/dev/welcome-frontend.yaml
 
 apiVersion: apps/v1
 kind: Deployment
@@ -87,7 +87,7 @@ metadata:
     # Questo nome univoco è utilizzato ad esempio con il comando:
     # kubectl get deployment <name> -o yaml
     # che ci serve per ottenere la descrizione yaml di quest'oggetto di tipo deployment.
-    name: { { .Release.Name } } # <== onboarding-frontend
+    name: { { .Release.Name } } # <== welcome-frontend
 
     # Le etichette che mettiamo qui servono a me che leggo il file e ad altri strumenti per
     # organizzare oggetti nel cluster. Per esempio se ho 1000 deployment posso dire:
@@ -96,7 +96,7 @@ metadata:
     # di nostra invenzione. Per esempio:
 
     labels:
-        app: { { .Release.Name } } # Il componente specifico (es. onboarding-frontend)
+        app: { { .Release.Name } } # Il componente specifico (es. welcome-frontend)
         part-of: adhr-enterprise-suite # La suite di appartenenza
         env: { { .Values.env | default "dev" } } # L'ambiente (preso dal file in /env)
         version: { { .Values.image.tag | quote } } # La release specifica
@@ -109,7 +109,7 @@ spec:
     # Usiamo solo la label più specifica per legare Deployment e Pod
     selector:
         matchLabels:
-            app: { { .Release.Name } } # <== onboarding-frontend
+            app: { { .Release.Name } } # <== welcome-frontend
 
     template:
         metadata:
@@ -153,14 +153,14 @@ spec:
 # template:
 #   metadata:
 #     labels:
-#       app: onboarding-frontend
+#       app: welcome-frontend
 #       env: dev
 
 # Il tuo service.yaml dovrà avere un selettore corrispondente per sapere a chi inviare il traffico:
 
 # spec:
 #   selector:
-#     app: onboarding-frontend # Cerca i Pod con questa label
+#     app: welcome-frontend # Cerca i Pod con questa label
 #     env: dev                 # E che siano in ambiente dev
 ```
 

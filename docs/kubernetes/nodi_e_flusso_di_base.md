@@ -38,14 +38,14 @@ Ecco come strutturerei i tuoi file per gestire i due Namespace:
 
 ├── env
 │   ├── local                  <-- Per Minikube
-│   │   ├── onboarding-frontend.yaml
-│   │   └── onboarding-backend.yaml
+│   │   ├── welcome-frontend.yaml
+│   │   └── welcome-backend.yaml
 │   ├── dev-aws                <-- Per AWS EKS (Ambiente Dev)
-│   │   ├── onboarding-frontend.yaml
-│   │   └── onboarding-backend.yaml
+│   │   ├── welcome-frontend.yaml
+│   │   └── welcome-backend.yaml
 │   └── prod-aws               <-- Per AWS EKS (Ambiente Prod)
-│       ├── onboarding-frontend.yaml
-│       └── onboarding-backend.yaml
+│       ├── welcome-frontend.yaml
+│       └── welcome-backend.yaml
 
 
 con questa struttura potremo dare i comandi: 
@@ -53,14 +53,14 @@ con questa struttura potremo dare i comandi:
 ```bash
 
 # Esempio: Installa il Frontend in LOCALE (Minikube)
-    helm install onboarding-frontend ./charts/adhr-enterprise-suite \
+    helm install welcome-frontend ./charts/adhr-enterprise-suite \
     -n dev \
-    -f env/local/onboarding-frontend.yaml
+    -f env/local/welcome-frontend.yaml
 
 # Esempio: Installa il Backend in AWS (Produzione)
-    helm install onboarding-backend ./charts/adhr-enterprise-suite \
+    helm install welcome-backend ./charts/adhr-enterprise-suite \
     -n prod \
-    -f env/prod-aws/onboarding-backend.yaml
+    -f env/prod-aws/welcome-backend.yaml
 
 ``` 
 
@@ -69,7 +69,7 @@ ecco un esempio. In env/dev-aws ho messo:
 ```yaml 
 # env/local.yaml
     image:
-    repository: 725494707422.dkr.ecr.eu-central-1.amazonaws.com/onboarding-backend
+    repository: 725494707422.dkr.ecr.eu-central-1.amazonaws.com/welcome-backend
     tag: dev-a1b2c3d # (il tag specifico del commit)
     pullPolicy: IfNotPresent 
 
@@ -80,8 +80,8 @@ Il tag viene passato "al volo" senza toccare il file. Possiamo anche impostare m
 un default in caso non passiamo il tag a volo. 
 
 ```bash
-helm upgrade onboarding-frontend ./charts/adhr-enterprise-suite \
-  -f env/local/onboarding-frontend.yaml \
+helm upgrade welcome-frontend ./charts/adhr-enterprise-suite \
+  -f env/local/welcome-frontend.yaml \
   --set image.tag=v1.2.3
 ```
 
@@ -102,22 +102,22 @@ Isolamento: Le app nel namespace dev non vedono (di default) quelle in prod.
 
 DNS Interno: Questa è la parte fondamentale. Dentro il cluster, il backend sarà raggiungibile all'indirizzo:
 
-1. onboarding-backend.dev.svc.cluster.local (nel namespace dev)
-2. onboarding-backend.prod.svc.cluster.local (nel namespace prod)
+1. welcome-backend.dev.svc.cluster.local (nel namespace dev)
+2. welcome-backend.prod.svc.cluster.local (nel namespace prod)
 
-Questo ti permette di avere lo stesso identico codice frontend che punta semplicemente a http://onboarding-backend, e Kubernetes risolverà l'indirizzo nel namespace corretto.
+Questo ti permette di avere lo stesso identico codice frontend che punta semplicemente a http://welcome-backend, e Kubernetes risolverà l'indirizzo nel namespace corretto.
 
 
 # Service
 Come sappiamo i pod vengono continuamente creati, interrotti, spostati ecc.. vuol dire che cambiano il loro indirizzo IP. Per fare in modo che siano esposti come servizi raggiungibili dall'esterno del cluster e per fare in modo che possano comunicare tra di loro senza dover sapere quale ip devono utilizzare, si creano i ***SERVICE*** . Un service di kubernetes è 
 essenzialmente una risorsa che serve a creare un punto di ingresso per un cluster di pods che forniscono il meesimo servizio. Ogni servizio ha sempre lo stesso IP Address, e la stessa porta che non cambiano mai finchè essite il service. I client possono aprire connessioni con il service e queste connessioni sono poi dirottate ai pods sottostanti.
 
-Quando crei un Service chiamato onboarding-backend, Kubernetes crea automaticamente un record DNS interno. Qualsiasi altro Pod nello stesso namespace può raggiungere il backend semplicemente usando l'hostname:
-http://onboarding-backend
+Quando crei un Service chiamato welcome-backend, Kubernetes crea automaticamente un record DNS interno. Qualsiasi altro Pod nello stesso namespace può raggiungere il backend semplicemente usando l'hostname:
+http://welcome-backend
 
 
 Se i pod fossero in namespace diversi (es. il frontend deve parlare a un database in un namespace shared), l'indirizzo sarebbe:
-http://onboarding-backend.nome-namespace.svc.cluster.local
+http://welcome-backend.nome-namespace.svc.cluster.local
 
 
 Il codice (es. React, Vue, Node.js) non deve avere l'URL "scritto nel codice" (hardcoded). Deve leggerlo da una Variabile d'Ambiente.
@@ -138,9 +138,9 @@ Dobbiamo dire a Kubernetes di "iniettare" queste variabili nel container. Aggiun
 # La trappola del "Browser vs Server" (Importante!)
 Qui molti sbagliano. Devi distinguere dove gira il codice:
 
-Server-Side (Node.js/Python/Go): Se il tuo frontend è un server che interroga il backend, l'indirizzo http://onboarding-backend (DNS interno) funziona perfettamente.
+Server-Side (Node.js/Python/Go): Se il tuo frontend è un server che interroga il backend, l'indirizzo http://welcome-backend (DNS interno) funziona perfettamente.
 
-Client-Side (React/Angular/Vue nel browser): Se il codice gira nel browser dell'utente (fuori dal cluster), il browser non sa cosa sia http://onboarding-backend. In quel caso, il frontend deve puntare all'URL pubblico gestito dall'Ingress.
+Client-Side (React/Angular/Vue nel browser): Se il codice gira nel browser dell'utente (fuori dal cluster), il browser non sa cosa sia http://welcome-backend. In quel caso, il frontend deve puntare all'URL pubblico gestito dall'Ingress.
 
 # minikube 
 

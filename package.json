@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@10.30.3",
   "devDependencies": {
     "@adhr/eslint-config": "workspace:*",
     "@adhr/prettier-config": "workspace:*",

@@ -1,12 +1,12 @@
 # Deployment descrive un oggetto di tipo Deplyment che di serve a definire Pods e ReplicaSet
-# qualcosa del tipo: voglio un N repliche di questa app
-# Consideriamo sempre il comando:
-# Esempio per l'ambiente dev
+# è una sorta di cotratto che viene salvato dentro etcd, qualcosa del tipo: voglio un N repliche di questa app
 
-# helm install onboarding-frontend ./charts/adhr-enterprise-suite \
+# Consideriamo sempre il comando per l'ambiente dev: 
+
+# helm install welcome-frontend ./charts/adhr-enterprise-suite \
 # -n dev-namespace \
 # --create-namespace \
-# -f env/dev/onboarding-frontend.yaml
+# -f env/dev/welcome-frontend.yaml
 
 apiVersion: apps/v1
 kind: Deployment
@@ -21,7 +21,7 @@ metadata:
     # Questo nome univoco è utilizzato ad esempio con il comando:
     # kubectl get deployment <name> -o yaml
     # che ci serve per ottenere la descrizione yaml di quest'oggetto di tipo deployment.
-    name: {{ .Release.Name }} # <== onboarding-frontend
+    name: {{ .Release.Name }} # <== welcome-frontend
 
     # Le etichette che mettiamo qui servono a me che leggo il file e ad altri strumenti per
     # organizzare oggetti nel cluster. Per esempio se ho 1000 deployment posso dire:
@@ -30,9 +30,9 @@ metadata:
     # di nostra invenzione. Per esempio:
 
     labels:
-        app: {{ .Release.Name }} # Il componente specifico (es. onboarding-frontend)
+        app: {{ .Release.Name }} # Il componente specifico (es. welcome-frontend)
         part-of: adhr-enterprise-suite # La suite di appartenenza
-        env: {{ .Values.env | default "dev" }} # L'ambiente (preso dal file in /env)
+        env: {{ .Values.env | default "development" }} # L'ambiente (preso dal file in /env)
         version: {{ .Values.image.tag | quote }} # La release specifica
         managed-by: {{ .Release.Service }} # Indica che è gestito da Helm
 
@@ -43,7 +43,7 @@ spec:
     # Usiamo solo la label più specifica per legare Deployment e Pod
     selector:
         matchLabels:
-            app: {{ .Release.Name }} # <== onboarding-frontend
+            app: {{ .Release.Name }} # <== welcome-frontend
 
     template:
         metadata:
@@ -56,7 +56,7 @@ spec:
         # Specifiche tecniche del POD. Se vuoi sidecar pattern aggiungi sotto containers.
         # il deployment.yaml non deve sapere se l'immagine è su Docker Hub, su AWS ECR o 
         # nel demone locale di Minikube. Deve solo ricevere un "indirizzo".
-        # Ad esempio in AWS utilizzerò : 725494707422.dkr.ecr.eu-central-1.amazonaws.com/onboarding-frontend
+        # Ad esempio in AWS utilizzerò : 725494707422.dkr.ecr.eu-central-1.amazonaws.com/welcome-frontend
         # 
         spec:
             containers:
@@ -65,17 +65,26 @@ spec:
                   imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
                   ports:
                       - containerPort: {{ .Values.service.port }}
-                        name: http
+                        name: http # <== ALIAS DI AGGANCIO AL SEWRVICE
                   env:
+                    # Variabile AMBIENTE (presa dai values o default a "local")
+                    - name: AMBIENTE
+                      value: {{ .Values.ambiente | default "local" | quote }}
+
                     # Iniettiamo BACKEND_URL solo se è definito (es. nel frontend)
                     {{- if and .Values.config .Values.config.backendUrl }}
                     - name: BACKEND_URL
                       value: {{ .Values.config.backendUrl | quote }}
                     {{- end }}
+
                     - name: NODE_ENV
                       value: {{ .Values.env | default "development" | quote }}
-                  resources:
-                    {{- toYaml .Values.resources | nindent 20 }}
+
+                    # Configurazione Database (fondamentale per il backend)
+                    {{- if and .Values.config .Values.config.databaseUrl }}
+                    - name: DATABASE_URL
+                      value: {{ .Values.config.databaseUrl | quote }}
+                    {{- end }}
 
 # Con le labels organizzate in questo modo possiamo dare i seguenti comandi per esempio:
 
@@ -100,12 +109,12 @@ spec:
 # template:
 #   metadata:
 #     labels:
-#       app: onboarding-frontend
+#       app: welcome-frontend
 #       env: dev
 
 # Il tuo service.yaml dovrà avere un selettore corrispondente per sapere a chi inviare il traffico:
 
 # spec:
 #   selector:
-#     app: onboarding-frontend # Cerca i Pod con questa label
+#     app: welcome-frontend # Cerca i Pod con questa label
 #     env: dev                 # E che siano in ambiente dev

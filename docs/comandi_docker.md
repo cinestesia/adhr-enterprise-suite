@@ -15,10 +15,10 @@
 5.  Rimuovi tutte le reti custom:
     docker network prune -f
 
-6.  docker build -t onboarding-backend:dev -f apps/onboarding-backend/Dockerfile .
+6.  docker build -t welcome-backend:dev -f apps/welcome-backend/Dockerfile .
     Questo comando crea l'immagine del nostro container.
 
-7.  docker run -d -p 3000:3000 --name onboarding-app onboarding-backend:dev 
+7.  docker run -d -p 3000:3000 --name welcome-app welcome-backend:dev 
     
     Ecco cosa fa questo comando:
 
@@ -32,5 +32,15 @@
 
     Nota: Se nel tuo codice Fastify usa una porta diversa (es. 8080), dovrai scrivere -p 3000:8080.
 
-    --name onboarding-app: Dà un nome mnemonico al container che sta girando. Così, per stopparlo, potrai scrivere docker stop onboarding-app invece di cercare l'ID alfanumerico.
+    --name welcome-app: Dà un nome mnemonico al container che sta girando. Così, per stopparlo, potrai scrivere docker stop welcome-app invece di cercare l'ID alfanumerico.
 
+8.  Creare immagine ( build ) :
+    docker compose --env-file apps/welcome-frontend/.env.development build --no-cache welcome-frontend
+
+9.  Running : 
+    docker compose --env-file apps/welcome-frontend/.env.production up -d welcome-frontend  
+
+
+10. Creare immagine + running 
+    docker compose --env-file apps/welcome-backend/.env.development up -d --build welcome-backend
+    
