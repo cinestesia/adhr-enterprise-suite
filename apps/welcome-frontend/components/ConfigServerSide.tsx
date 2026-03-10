@@ -12,7 +12,7 @@ export async function ConfigServerSide() {
 
                 <li>
                     <div className="p-4 flex gap-2 border-b border-gray-400 md:border-b-0">
-                        <span className="font-semibold">Adhr suite</span>
+                        <span className="font-semibold font-mono text-xl">Adhr suite apps</span>
                         <span className="break-all text-sm">{process.env['DATABASE_URL']}</span>
                     </div>
                 </li>
