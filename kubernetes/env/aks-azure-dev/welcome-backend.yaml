@@ -1,0 +1,24 @@
+# env/aks-azure-dev/welcome-backend.yaml
+image:
+  repository: adhresregistry.azurecr.io/welcome-backend
+  tag: "development-latest" # <== Qui la CI/CD inietterà lo SHA di Git
+  pullPolicy: Always
+
+service:
+  port: 3001
+
+ingress:
+  enabled: true
+  # In staging/dev spesso si usa un sottodominio
+  host: "api.4.232.3.98.nip.io" 
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # Azure specifico: permette di gestire il load balancer correttamente
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+
+config:
+  databaseUrl: "..." # DB di sviluppo
+
+env: development-azure
+ambiente: azure
+replicaCount: 1

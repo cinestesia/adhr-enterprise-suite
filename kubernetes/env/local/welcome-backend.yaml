@@ -1,0 +1,37 @@
+# env/local.yaml
+image:
+  repository: welcome-backend 
+  tag: "development-latest"
+  
+  # quando devo scaricare le immagini? 
+  
+  # Always (Sempre): Ogni volta che il Pod parte, Kubernetes chiede al registro: 
+  # "È cambiata l'immagine?". Se sì, la scarica.
+  
+  # IfNotPresent (Se non c'è): Kubernetes controlla se l'immagine è già presente nel nodo 
+  # (nel tuo PC). Se c'è, usa quella. Se non c'è, la scarica.
+
+  # Never (Mai): Kubernetes non proverà mai a scaricarla. Se non la trova localmente, 
+  # il Pod fallisce. (Si usa raramente).
+
+  # Uso professionale: Fondamentale per Minikube. Se fai docker build sul tuo PC, 
+  # l'immagine è già lì. Con questa policy, Kubernetes la usa istantaneamente senza 
+  # cercarla su internet.
+  
+
+  pullPolicy: IfNotPresent 
+
+service:
+  port: 3001
+
+ingress:
+  host: "api.welcome.local"
+  annotations: {}  # <--- Questo dice a Helm: "annotations esiste ma è vuoto"
+
+config:
+  backendUrl: "http://self" # o semplicemente ""
+  databaseUrl: "default_database_url"
+
+env: development
+
+ambiente: development

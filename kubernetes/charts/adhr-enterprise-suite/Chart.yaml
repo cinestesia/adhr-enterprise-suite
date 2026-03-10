@@ -1,0 +1,33 @@
+# COMANDO: 
+
+#   helm install welcome-backend 
+#   ./kubernetes/charts/adhr-enterprise-suite -n development 
+#   -f ./kubernetes/env/local/welcome-backend.yaml
+
+# helm install <NOME>: Serve a Kubernetes per dare un nome univoco
+# ai tuoi oggetti relativi a questa app: (Pod, Service, Ingress) nel cluster.
+# Questo valore viene passato nei template come {{ .Release.Name }}
+
+apiVersion: v2 # versione dell'API di Kubernetes
+
+# Nome del template che generiamo con helm.
+# Identifica il "prodotto" nel tuo archivio di chart.
+# per cercarli:
+# helm list -n development
+# kubectl describe pod <nome-pod> -n development | grep helm.sh/chart
+# NAME                NAMESPACE  	REVISION	UPDATED                                	STATUS  	CHART                      	APP VERSION
+# welcome-backend	development	2       	2026-02-28 10:37:22.536429397 +0100 CET	deployed	adhr-enterprise-suite-0.1.0	2.4.5      
+
+
+name: adhr-enterprise-suite
+
+description: Adhr Enterprise suite # Descrizione del pacchetto
+
+# Versione del PACCHETTO Helm. Se cambio anche solo una cosa nello yaml
+# aumento la versione
+version: 0.1.3
+
+# Versione del codice, per esempio TAG di GitHub
+appVersion: 0.0.1
+
+type: application

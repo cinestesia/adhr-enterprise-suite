@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ .Release.Name }}-ingress"
+  annotations:
+    # Questa riga è fondamentale per far capire a Nginx come gestire i percorsi
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: nginx # <== IL CONTROLLER
+  rules: # <=== LE REGOLE 
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: / # <== Tutti i path / 
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}
+                port:
+                  number: 80 # Deve corrispondere a service.port in values.yaml

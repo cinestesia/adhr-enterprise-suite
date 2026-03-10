@@ -1,0 +1,58 @@
+name: Deploy Frontend Dev
+
+on:
+  push:
+    branches: [ "development" ]
+    paths:
+      - 'apps/welcome-frontend/**'
+      # Se modifichi i file di configurazione Helm, vuoi che il deploy riparta
+      - 'kubernetes/charts/adhr-enterprise-suite/**'
+      - 'kubernetes/env/aks-azure-dev/welcome-frontend.yaml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Login su Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login su ACR
+        run: |
+          az acr login --name adhresregistry
+
+      # Setup Buildx è necessario per usare il caching avanzato (gha)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build e Push con Cache Turbo
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/welcome-frontend/Dockerfile
+          push: true
+          tags: adhresregistry.azurecr.io/welcome-frontend:${{ github.sha }}
+          # Carica la cache dalle run precedenti e salva quella nuova
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Se il tuo Dockerfile ha bisogno delle variabili .env in fase di BUILD,
+          # puoi passarle qui come build-args. 
+          # Se servono solo a RUNTIME, gestiscile tramite Helm.
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ADHR-ENTERPRISE-SUITE
+          cluster-name: adhr-es-eks-cluster
+
+      - name: Deploy via Helm
+        run: |
+          helm upgrade --install welcome-frontend ./kubernetes/charts/adhr-enterprise-suite \
+            -f ./kubernetes/env/aks-azure-dev/welcome-frontend.yaml \
+            --namespace development \
+            --set image.repository=adhresregistry.azurecr.io/welcome-frontend \
+            --set image.tag=${{ github.sha }}

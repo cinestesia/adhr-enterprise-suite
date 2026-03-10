@@ -1,0 +1,20 @@
+image:
+  repository: adhresregistry.azurecr.io/welcome-frontend
+  tag: "temp" # Verrà sovrascritto da --set nella GitHub Action
+  pullPolicy: Always
+
+service:
+  port: 3000
+
+config:
+  # Se il backend ha un suo ingress, usa quello!
+  # Esempio: "http://backend.4.232.3.98.nip.io"
+  backendUrl: "http://welcome.backend" 
+
+ingress:
+  enabled: true
+  host: "frontend.4.232.3.98.nip.io"
+
+env: development # Cambiato da production-dev a development per coerenza
+ambiente: azure
+replicaCount: 1

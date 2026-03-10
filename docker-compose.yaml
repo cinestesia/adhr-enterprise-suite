@@ -1,0 +1,58 @@
+services:
+  welcome-frontend:
+    # qui definiamo delle build arguments. le args servono solo durante la creazione
+    # dell'immagine, cioè mentre docker esegue: 
+    # RUN pnpm turbo build --filter=@adhr/welcome-frontend i valori ${} sono presi
+    # dal file .env ( default ) oppure dal file che dichiariamo con --env-file 
+    # docker compose --env-file apps/welcome-frontend/.env.production up ecc ...
+    
+    # Queste variabili vengono iniettate nel Dockerfile e affinchè Docker possa 
+    # utilizzarle devono esserci ARG_DATABASE_URL dentro DockerFile.  
+    # Una volta che l'immagine è creata, queste variabili "spariscono" 
+    # a meno che non vengano usate per compilare qualcosa di statico.
+    
+    build:
+      context: .
+      dockerfile: apps/welcome-frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_NODE_ENV: ${NEXT_PUBLIC_NODE_ENV:-}
+        NEXT_PUBLIC_PORT: ${NEXT_PUBLIC_PORT:-}
+        NEXT_PUBLIC_DATABASE_URL: ${NEXT_PUBLIC_DATABASE_URL:-}
+        NEXT_PUBLIC_LOG_LEVEL: ${NEXT_PUBLIC_LOG_LEVEL:-}
+        
+    # Sintassi per concatenare: [Variabile]-[Testo Fisso]
+    # Se NODE_ENV=production -> welcome-frontend:production-latest
+    # Se NODE_ENV è vuoto -> welcome-frontend:latest
+    image: welcome-frontend:${NODE_ENV:+$NODE_ENV-}latest
+    container_name: welcome-frontend
+    ports:
+      - "3000:3000"
+      
+    # Per fare in modo che il compoenente legga i dati al runtime li mettiamo qui 
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}  
+      AMBIENTE: ${AMBIENTE}
+
+    restart: unless-stopped
+
+
+  welcome-backend:
+    build:
+      context: .
+      dockerfile: apps/welcome-backend/Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
+
+    image: welcome-backend:${NODE_ENV:+$NODE_ENV-}latest
+    container_name: welcome-backend
+    ports:
+      - "3001:3001"
+
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3001
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+
+    restart: unless-stopped

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # Il nome del service deve essere prevedibile (es. welcome-backend)
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    part-of: adhr-enterprise-suite
+    env: {{ .Values.env | default "dev" }}
+spec:
+  # ClusterIP. È lo standard perché rende l'app raggiungibile solo dentro il cluster. 
+  # Sarà poi l'Ingress ad aprirla al mondo esterno. 
+  type: ClusterIP
+  ports:
+    
+    # questa è la porta che vedono gli altri Pod 
+    - port: 80          # La porta "virtuale" del Service dentro il cluster
+      
+      # qui http è un segnaposto definito in deployment.yaml
+      targetPort: http  
+      protocol: TCP
+      name: http
+  selector:
+    # Fondamentale: deve matchare ESATTAMENTE le labels del template dei Pod nel Deployment
+    app: {{ .Release.Name }}

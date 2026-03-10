@@ -1,0 +1,22 @@
+# env/local.yaml
+image:
+  repository: welcome-frontend 
+  tag: "development-latest"
+  pullPolicy: IfNotPresent 
+
+service:
+  port: 3000
+
+config:
+  # In locale su Minikube, il frontend (se fa SSR) parla al backend 
+  # usando il nome del Service Kubernetes
+  backendUrl: "http://welcome-backend"
+
+
+ingress:
+  host: "welcome.local"
+  annotations: {}  # <--- Questo dice a Helm: "annotations esiste ma è vuoto"
+
+env: development
+
+ambiente: development

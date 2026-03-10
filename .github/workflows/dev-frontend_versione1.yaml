@@ -1,0 +1,52 @@
+name: Deploy Frontend Dev
+
+on:
+  push:
+    branches: ["nobrach"]
+    paths:
+      - 'apps/welcome-frontend/**' # Cambia con il nome della tua cartella frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Login su Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login su ACR
+        run: |
+          az acr login --name adhresregistry 
+
+      - name: Build e Push Immagine
+        run: |
+          # 1. Carichiamo le variabili dal file env per usarle nel comando build
+          # Questo comando legge il file e lo trasforma in argomenti --build-arg
+          export $(grep -v '^#' apps/welcome-frontend/.env.development | xargs)
+          
+          # 2. Build con gli argomenti (se necessari)
+          docker build \
+            --tag adhresregistry.azurecr.io/welcome-frontend:${{ github.sha }} \
+            --file ./apps/welcome-frontend/Dockerfile \
+            . 
+            
+          # 3. Push
+          docker push adhresregistry.azurecr.io/welcome-frontend:${{ github.sha }}
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ADHR-ENTERPRISE-SUITE
+          cluster-name: adhr-es-eks-cluster
+
+      - name: Deploy via Helm
+        run: |
+            helm upgrade --install welcome-frontend ./kubernetes/charts/adhr-enterprise-suite \
+            -f ./kubernetes/env/aks-azure-dev/welcome-frontend.yaml \
+            --namespace development \
+            --set image.repository=adhresregistry.azurecr.io/welcome-frontend \
+            --set image.tag=${{ github.sha }}

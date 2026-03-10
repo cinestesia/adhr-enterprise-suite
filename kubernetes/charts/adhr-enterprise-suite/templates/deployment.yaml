@@ -1,0 +1,120 @@
+# Deployment descrive un oggetto di tipo Deplyment che di serve a definire Pods e ReplicaSet
+# è una sorta di cotratto che viene salvato dentro etcd, qualcosa del tipo: voglio un N repliche di questa app
+
+# Consideriamo sempre il comando per l'ambiente dev: 
+
+# helm install welcome-frontend ./charts/adhr-enterprise-suite \
+# -n dev-namespace \
+# --create-namespace \
+# -f env/dev/welcome-frontend.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+    # Ogni oggetto creato in kubernetes ha dei metadata . Per esempio name indica il nome
+    # di questo oggetto di tipo Deplyment e deve essere univoco all'interno di un namespace.
+    # Si noti che il namespace non lo dichiareremo qui nello yaml perchè non è un best practice
+    # ma lo passeremo alla linea di comando.
+    # lo si potrebbe rendere parametrico:
+    # namespace: {{ .Release.Namespace }} # Prende il valore passato col flag -n
+    # Questo nome univoco è utilizzato ad esempio con il comando:
+    # kubectl get deployment <name> -o yaml
+    # che ci serve per ottenere la descrizione yaml di quest'oggetto di tipo deployment.
+    name: {{ .Release.Name }} # <== welcome-frontend
+
+    # Le etichette che mettiamo qui servono a me che leggo il file e ad altri strumenti per
+    # organizzare oggetti nel cluster. Per esempio se ho 1000 deployment posso dire:
+    # "Fammi vedere tutti i Deployment che hanno questa label"
+    # In labels mettiamo quindi semplicemente una lista di (chiave,valore)
+    # di nostra invenzione. Per esempio:
+
+    labels:
+        app: {{ .Release.Name }} # Il componente specifico (es. welcome-frontend)
+        part-of: adhr-enterprise-suite # La suite di appartenenza
+        env: {{ .Values.env | default "development" }} # L'ambiente (preso dal file in /env)
+        version: {{ .Values.image.tag | quote }} # La release specifica
+        managed-by: {{ .Release.Service }} # Indica che è gestito da Helm
+
+spec:
+    replicas: {{ .Values.replicaCount }}
+
+    # qui dico: Io ( deplyment ) sono responsabile di tutti i PODS che hanno questa etichetta.
+    # Usiamo solo la label più specifica per legare Deployment e Pod
+    selector:
+        matchLabels:
+            app: {{ .Release.Name }} # <== welcome-frontend
+
+    template:
+        metadata:
+            # Qui mettiamo labels più specifiche per identificare i pods
+            labels:
+                app: {{ .Release.Name }}
+                env: {{ .Values.env | default "dev" }}
+                version: {{ .Values.image.tag | quote }}
+
+        # Specifiche tecniche del POD. Se vuoi sidecar pattern aggiungi sotto containers.
+        # il deployment.yaml non deve sapere se l'immagine è su Docker Hub, su AWS ECR o 
+        # nel demone locale di Minikube. Deve solo ricevere un "indirizzo".
+        # Ad esempio in AWS utilizzerò : 725494707422.dkr.ecr.eu-central-1.amazonaws.com/welcome-frontend
+        # 
+        spec:
+            containers:
+                - name: {{ .Release.Name }}
+                  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+                  imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+                  ports:
+                      - containerPort: {{ .Values.service.port }}
+                        name: http # <== ALIAS DI AGGANCIO AL SEWRVICE
+                  env:
+                    # Variabile AMBIENTE (presa dai values o default a "local")
+                    - name: AMBIENTE
+                      value: {{ .Values.ambiente | default "local" | quote }}
+
+                    # Iniettiamo BACKEND_URL solo se è definito (es. nel frontend)
+                    {{- if and .Values.config .Values.config.backendUrl }}
+                    - name: BACKEND_URL
+                      value: {{ .Values.config.backendUrl | quote }}
+                    {{- end }}
+
+                    - name: NODE_ENV
+                      value: {{ .Values.env | default "development" | quote }}
+
+                    # Configurazione Database (fondamentale per il backend)
+                    {{- if and .Values.config .Values.config.databaseUrl }}
+                    - name: DATABASE_URL
+                      value: {{ .Values.config.databaseUrl | quote }}
+                    {{- end }}
+
+# Con le labels organizzate in questo modo possiamo dare i seguenti comandi per esempio:
+
+# 1. kubectl get all -l part-of=adhr-enterprise-suite
+# dammi tutti gli oggetto cha fanno parte di questa suite
+
+# 2. kubectl get pods -l env=prod
+# Dammi tutti gli oggetti di tipo pods  di produzione
+
+# 3. kubectl get pods -l version=1.2.0
+# dammi tutti gli oggetti di tipo pods con versione 1.2.0
+
+# 4. kubectl delete svc -l env=dev
+# cancella tutti i servizi di tipo ebv
+
+# in particola quesst'ultima linea l'ho messa per un best practice:
+
+# Il Service non si collega al Deployment, ma direttamente ai Pod tramite il selector.
+
+# Se nel tuo deployment.yaml hai messo:
+
+# template:
+#   metadata:
+#     labels:
+#       app: welcome-frontend
+#       env: dev
+
+# Il tuo service.yaml dovrà avere un selettore corrispondente per sapere a chi inviare il traffico:
+
+# spec:
+#   selector:
+#     app: welcome-frontend # Cerca i Pod con questa label
+#     env: dev                 # E che siano in ambiente dev
