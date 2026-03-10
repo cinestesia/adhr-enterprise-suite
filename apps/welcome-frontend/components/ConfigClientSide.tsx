@@ -8,7 +8,7 @@ export function ConfigClientSide() {
                 
                 <li>
                     <div className="flex gap-2">
-                        <span className="font-semibold">DATABASE URLO!</span>
+                        <span className="font-semibold">DATABASE URL</span>
                         <span className="break-all text-sm">{process.env.NEXT_PUBLIC_DATABASE_URL}</span>
                     </div>
                 </li>
