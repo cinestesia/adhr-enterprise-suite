@@ -3,7 +3,7 @@
 export function ConfigClientSide() {
     return (
         <section className="p-8 bg-gray-100 rounded-lg shadow-md">
-            <h1 className="font-mono text-xl">Ambiente visto dal client: {process.env.NEXT_PUBLIC_NODE_ENV} </h1>
+            <h1 className="font-mono text-2xl">Ambiente visto dal client: {process.env.NEXT_PUBLIC_NODE_ENV} </h1>
             <ul className="p-8 list-decimal">
                 
                 <li>
