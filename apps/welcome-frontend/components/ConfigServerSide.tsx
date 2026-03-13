@@ -6,14 +6,21 @@ export async function ConfigServerSide() {
     return (
         <section className="p-8 bg-gray-100 rounded-xl shadow-md shadow-slate-300">
             
-            <h1 className="font-mono text-xl">Ambiente visto dal server: {process.env['AMBIENTE']} </h1>
+            <h1 className="font-mono text-xl">Ambiente visto dal server: {process.env['ENVIRONMENT']} </h1>
             
             <ul className="p-8 list-decimal">
 
                 <li>
                     <div className="p-4 flex gap-2 border-b border-gray-400 md:border-b-0">
-                        <span className="font-semibold font-mono text-xl">Adhr suite apps</span>
-                        <span className="break-all text-sm">{process.env['DATABASE_URL']}</span>
+                        <span className="font-semibold font-mono text-xl">AUTH_KEYCLOAK_ISSUER</span>
+                        <span className="break-all text-sm">{process.env['AUTH_KEYCLOAK_ISSUER']}</span>
+                    </div>
+                </li>
+
+                <li>
+                    <div className="p-4 flex gap-2 border-b border-gray-400 md:border-b-0">
+                        <span className="font-semibold font-mono text-xl">WELCOME_AUTH_URL</span>
+                        <span className="break-all text-sm">{process.env['WELCOME_AUTH_URL']}</span>
                     </div>
                 </li>
 

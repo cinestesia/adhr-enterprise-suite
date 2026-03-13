@@ -66,55 +66,14 @@ spec:
                   ports:
                       - containerPort: {{ .Values.service.port }}
                         name: http # <== ALIAS DI AGGANCIO AL SEWRVICE
+                    # --- SEZIONE VARIABILI D'AMBIENTE ---
                   env:
-                    # Variabile AMBIENTE (presa dai values o default a "local")
-                    - name: AMBIENTE
-                      value: {{ .Values.ambiente | default "local" | quote }}
-
-                    # Iniettiamo BACKEND_URL solo se è definito (es. nel frontend)
-                    {{- if and .Values.config .Values.config.backendUrl }}
-                    - name: BACKEND_URL
-                      value: {{ .Values.config.backendUrl | quote }}
-                    {{- end }}
-
-                    - name: NODE_ENV
-                      value: {{ .Values.env | default "development" | quote }}
-
-                    # Configurazione Database (fondamentale per il backend)
-                    {{- if and .Values.config .Values.config.databaseUrl }}
-                    - name: DATABASE_URL
-                      value: {{ .Values.config.databaseUrl | quote }}
-                    {{- end }}
-
-# Con le labels organizzate in questo modo possiamo dare i seguenti comandi per esempio:
-
-# 1. kubectl get all -l part-of=adhr-enterprise-suite
-# dammi tutti gli oggetto cha fanno parte di questa suite
-
-# 2. kubectl get pods -l env=prod
-# Dammi tutti gli oggetti di tipo pods  di produzione
-
-# 3. kubectl get pods -l version=1.2.0
-# dammi tutti gli oggetti di tipo pods con versione 1.2.0
-
-# 4. kubectl delete svc -l env=dev
-# cancella tutti i servizi di tipo ebv
-
-# in particola quesst'ultima linea l'ho messa per un best practice:
-
-# Il Service non si collega al Deployment, ma direttamente ai Pod tramite il selector.
-
-# Se nel tuo deployment.yaml hai messo:
-
-# template:
-#   metadata:
-#     labels:
-#       app: welcome-frontend
-#       env: dev
-
-# Il tuo service.yaml dovrà avere un selettore corrispondente per sapere a chi inviare il traffico:
-
-# spec:
-#   selector:
-#     app: welcome-frontend # Cerca i Pod con questa label
-#     env: dev                 # E che siano in ambiente dev
+                  {{- range $key, $val := .Values.env }}
+                    - name: {{ $key }}
+                      value: {{ $val | quote }}
+                  {{- end }}
+                  
+                  {{- range $key, $val := .Values.secretEnv }}
+                    - name: {{ $key }}
+                      value: {{ $val | quote }}
+                  {{- end }}

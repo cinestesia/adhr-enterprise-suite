@@ -55,4 +55,11 @@ jobs:
             -f ./kubernetes/env/aks-azure-dev/welcome-frontend.yaml \
             --namespace development \
             --set image.repository=adhresregistry.azurecr.io/welcome-frontend \
-            --set image.tag=${{ github.sha }}
+            --set image.tag=${{ github.sha }} \
+            --set env.ENVIRONMENT="development" \
+            --set env.AUTH_KEYCLOAK_ID="welcome-app" \
+            --set env.AUTH_KEYCLOAK_ISSUER="http://auth.4.232.3.98.nip.io/realms/internal-adhr" \
+            --set env.WELCOME_AUTH_URL="http://frontend.4.232.3.98.nip.io" \
+            --set env.NEXT_PUBLIC_NODE_ENV="development" \
+            --set secretEnv.AUTH_KEYCLOAK_SECRET="${{ secrets.WELCOME_KEYCLOAK_SECRET }}" \
+            --set secretEnv.WELCOME_AUTH_SECRET="${{ secrets.WELCOME_AUTH_SECRET }}"

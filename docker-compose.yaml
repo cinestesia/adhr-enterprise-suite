@@ -16,10 +16,7 @@ services:
       dockerfile: apps/welcome-frontend/Dockerfile
       args:
         NEXT_PUBLIC_NODE_ENV: ${NEXT_PUBLIC_NODE_ENV:-}
-        NEXT_PUBLIC_PORT: ${NEXT_PUBLIC_PORT:-}
-        NEXT_PUBLIC_DATABASE_URL: ${NEXT_PUBLIC_DATABASE_URL:-}
-        NEXT_PUBLIC_LOG_LEVEL: ${NEXT_PUBLIC_LOG_LEVEL:-}
-        
+
     # Sintassi per concatenare: [Variabile]-[Testo Fisso]
     # Se NODE_ENV=production -> welcome-frontend:production-latest
     # Se NODE_ENV è vuoto -> welcome-frontend:latest
@@ -31,8 +28,12 @@ services:
     # Per fare in modo che il compoenente legga i dati al runtime li mettiamo qui 
     environment:
       NODE_ENV: ${NODE_ENV}
-      DATABASE_URL: ${DATABASE_URL}  
-      AMBIENTE: ${AMBIENTE}
+      ENVIRONMENT: ${ENVIRONMENT}
+      AUTH_KEYCLOAK_ID: ${AUTH_KEYCLOACK_ID}
+      AUTH_KEYCLOAK_SECRET: ${AUTH_KEYCLOACK_SECRET}
+      AUTH_KEYCLOAK_ISSUER: ${AUTH_KEYCLOACK_ISSUER}
+      WELCOME_AUTH_SECRET: ${WELCOME_AUTH_SECRET}
+      WELCOME_AUTH_URL: ${WELCOME_AUTH_URL}
 
     restart: unless-stopped
 

@@ -7,8 +7,6 @@ service:
   port: 3000
 
 config:
-  # Se il backend ha un suo ingress, usa quello!
-  # Esempio: "http://backend.4.232.3.98.nip.io"
   backendUrl: "http://welcome.backend" 
 
 ingress:
