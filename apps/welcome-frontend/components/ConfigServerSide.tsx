@@ -19,7 +19,7 @@ export async function ConfigServerSide() {
 
                 <li>
                     <div className="p-4 flex gap-2 border-b border-gray-400 md:border-b-0">
-                        <span className="font-semibold font-mono text-xl">WELCOME_AUTH_URLOS</span>
+                        <span className="font-semibold font-mono text-xl">WELCOME_AUTH_URL</span>
                         <span className="break-all text-sm">{process.env['WELCOME_AUTH_URL']}</span>
                     </div>
                 </li>

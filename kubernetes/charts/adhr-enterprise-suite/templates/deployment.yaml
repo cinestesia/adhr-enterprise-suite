@@ -32,7 +32,7 @@ metadata:
     labels:
         app: {{ .Release.Name }} # Il componente specifico (es. welcome-frontend)
         part-of: adhr-enterprise-suite # La suite di appartenenza
-        env: {{ .Values.env | default "development" }} # L'ambiente (preso dal file in /env)
+        env: {{ .Values.ambiente | default "development" }} # L'ambiente (preso dal file in /env)
         version: {{ .Values.image.tag | quote }} # La release specifica
         managed-by: {{ .Release.Service }} # Indica che è gestito da Helm
 
@@ -50,7 +50,7 @@ spec:
             # Qui mettiamo labels più specifiche per identificare i pods
             labels:
                 app: {{ .Release.Name }}
-                env: {{ .Values.env | default "dev" }}
+                env: {{ .Values.ambiente | default "development" }}
                 version: {{ .Values.image.tag | quote }}
 
         # Specifiche tecniche del POD. Se vuoi sidecar pattern aggiungi sotto containers.

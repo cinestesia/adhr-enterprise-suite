@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}
     part-of: adhr-enterprise-suite
-    env: {{ .Values.env | default "dev" }}
+    env: {{ .Values.ambiente | default "development" }}
 spec:
   # ClusterIP. È lo standard perché rende l'app raggiungibile solo dentro il cluster. 
   # Sarà poi l'Ingress ad aprirla al mondo esterno. 
