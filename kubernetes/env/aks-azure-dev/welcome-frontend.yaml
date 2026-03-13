@@ -13,6 +13,5 @@ ingress:
   enabled: true
   host: "frontend.4.232.3.98.nip.io"
 
-env: development # Cambiato da production-dev a development per coerenza
 ambiente: azure
 replicaCount: 1
