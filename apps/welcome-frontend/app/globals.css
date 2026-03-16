@@ -45,6 +45,9 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+
+    /* Aggiungi questa riga in fondo al blocco @theme inline */
+    --background-image-adhr-gradient: linear-gradient(to right, var(--brand-adhr-dark), var(--brand-adhr-light));
 }
 
 :root {
@@ -80,6 +83,19 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    /* Cambiamo il Primary col Rosso ADHR */
+    --primary: oklch(0.45 0.18 25); 
+    --primary-foreground: oklch(0.985 0 0); /* Testo bianco su sfondo rosso */
+
+    /* Cambiamo il colore della Sidebar attiva */
+    --sidebar-primary: oklch(0.45 0.18 25);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+
+    /* Definiamo i tuoi colori brand come variabili extra per i gradienti */
+    --brand-adhr-dark: oklch(0.45 0.18 25);
+    --brand-adhr-light: oklch(0.58 0.23 25);
+
+
 }
 
 .dark {
