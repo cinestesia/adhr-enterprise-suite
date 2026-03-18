@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
-
+// console.log("CIAOOO")
 export default auth( (req) => {
 	const { nextUrl } = req
 	const isLoggedIn = !!req.auth?.user // NextAuth mette l'utente in req.auth.user
