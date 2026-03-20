@@ -29,10 +29,11 @@ COPY turbo.json turbo.json
 #--- AMBIENTE PER IL BUILDING  ---
 
 ARG NEXT_PUBLIC_NODE_ENV
-
+ARG NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER
 
 # Passiamo l'ARG a ENV così che Next.js possa leggerlo durante 'pnpm turbo build'
 ENV NEXT_PUBLIC_NODE_ENV=${NEXT_PUBLIC_NODE_ENV}
+ENV NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER=${NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER}
 
 RUN npm install -g pnpm@10.30.1
 RUN pnpm turbo build --filter=@adhr/welcome-frontend
