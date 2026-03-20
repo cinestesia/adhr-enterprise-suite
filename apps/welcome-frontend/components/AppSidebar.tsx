@@ -126,18 +126,18 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4 bg-zinc-50/50">
+      <SidebarFooter className="border-t bg-zinc-50/50 p-2 group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="hover:bg-zinc-200/50 transition-all rounded-xl border border-transparent hover:border-zinc-200"
+                  className="hover:bg-zinc-200/50 transition-all rounded-xl border border-transparent hover:border-zinc-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#A00407]/10 border border-[#A00407]/20">
-                    <User2 className="size-5 text-[#A00407]" />
-                  </div>
+                <div className="flex items-center justify-center rounded-full bg-[#A00407]/10 border border-[#A00407]/20 p-2 shrink-0">
+                  <User2 className="size-5 text-[#A00407]" />
+                </div>
                   <div className="flex flex-col items-start text-sm group-data-[collapsible=icon]:hidden ml-3">
                     <span className="font-bold text-zinc-800 truncate w-32">
                       {user?.name}

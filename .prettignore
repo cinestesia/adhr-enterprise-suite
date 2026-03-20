@@ -4,3 +4,5 @@ dist
 build
 pnpm-lock.yaml
 .next
+templates/*.yaml
+templates/**/*.yaml
