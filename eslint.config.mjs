@@ -1,4 +1,4 @@
-import adhrConfig from './packages/eslint-config/index.js';
+import adhrConfig from './packages/eslint-config/index.js'
 
 export default [
     {
@@ -11,4 +11,4 @@ export default [
         ],
     },
     ...adhrConfig,
-];
+]

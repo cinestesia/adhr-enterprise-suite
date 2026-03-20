@@ -1,0 +1,317 @@
+/* =========================
+   1. LAYOUT BASE
+========================= */
+
+html,
+body,
+.login-pf-page {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-color: #d1d3d4;
+}
+
+.login-pf-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container principale */
+#kc-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#kc-container-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* =========================
+   2. HEADER / LOGO
+========================= */
+
+#kc-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+/* Logo accessibile */
+#kc-header-wrapper {
+    width: 100%;
+    max-width: 280px;
+    height: 120px;
+
+    background-image: url('../img/logo-adhr-login.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    /* Nasconde il testo visivamente ma NON per screen reader */
+    position: relative;
+    color: transparent;
+}
+
+/* =========================
+   3. CARD LOGIN
+========================= */
+
+.card-pf {
+    width: 100%;
+    max-width: 400px;
+    margin: 0;
+
+    padding: 32px 28px;
+
+    background: #ffffff;
+    border-radius: 16px;
+    border: none;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   4. TITOLI
+========================= */
+
+#kc-page-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #a1000e;
+
+    margin-bottom: 24px;
+}
+
+/* =========================
+   5. INPUT
+========================= */
+
+#kc-form-login input:not([type='submit']) {
+    width: 100%;
+    height: 44px;
+
+    /*padding: 0 14px;*/
+    padding: 0 40px 0 14px;
+    margin-bottom: 14px;
+
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+
+    box-sizing: border-box;
+    background-color: #fff;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+/* Focus accessibile */
+#kc-form-login input:focus {
+    outline: 2px solid #a1000e;
+    outline-offset: 2px;
+
+    border-color: #a1000e;
+
+    /* combinazione perfetta */
+    box-shadow:
+        0 0 0 3px rgba(161, 0, 14, 0.15),
+        0 0 8px rgba(161, 0, 14, 0.25);
+}
+
+/* =========================
+   6. BOTTONE LOGIN
+========================= */
+
+#kc-login {
+    width: 100%;
+    height: 46px;
+
+    border-radius: 10px;
+    border: none;
+
+    background-color: #a0050d;
+    color: #ffffff;
+
+    font-weight: 600;
+    font-size: 1rem;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        transform 0.05s;
+}
+
+#kc-login:hover {
+    background-color: #87040b;
+}
+
+#kc-login:active {
+    transform: scale(0.98);
+}
+
+/* Focus accessibile anche per bottone */
+#kc-login:focus {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+}
+
+/* =========================
+   7. LINK (es. password dimenticata)
+========================= */
+
+a {
+    color: #a1000e;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   8. RESPONSIVE
+========================= */
+
+@media (max-width: 480px) {
+    .card-pf {
+        padding: 24px 20px;
+        border-radius: 12px;
+    }
+
+    #kc-header-wrapper {
+        width: 100%;
+        max-width: 320px; /* aumenta */
+        height: 140px; /* aumenta */
+    }
+}
+
+/* =========================
+   9. PULIZIA ELEMENTI EXTRA
+========================= */
+
+.login-pf-header,
+#kc-info {
+    display: none;
+}
+
+/* =========================
+   10. EYE & PASSWORD TOGGLE (FIX DEFINITIVO)
+=========================== */
+
+/* Contenitore dell'input password */
+.pf-c-input-group {
+    position: relative !important;
+    display: flex !important;
+    width: 100% !important;
+}
+
+/* Stilizzazione del bottone occhio */
+.pf-c-button.pf-m-control {
+    all: unset !important; /* Reset totale */
+
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+
+    /* Deve coprire l'altezza esatta dell'input (44px) */
+    height: 44px !important;
+    width: 46px !important; /* Area cliccabile comoda */
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    cursor: pointer !important;
+    z-index: 999 !important; /* Più alto di tutto per non sparire al focus */
+
+    background: transparent !important;
+}
+
+/* Dimensioni e stile dell'icona dentro il bottone */
+.pf-c-button.pf-m-control i {
+    font-size: 1.3rem !important; /* Ingrandisce l'occhio */
+    color: #6a6e73 !important; /* Grigio neutro */
+    pointer-events: none; /* L'evento click passa al bottone padre */
+}
+
+/* Hover dell'occhio */
+.pf-c-button.pf-m-control:hover i {
+    color: #a0050d !important; /* Rosso ADHR al passaggio */
+}
+
+/* Rimuove i bordi che PatternFly mette via ::after */
+.pf-c-button.pf-m-control::after {
+    display: none !important;
+}
+
+/* =========================
+   11. AGGIUSTAMENTO INPUT
+=========================== */
+
+/* Assicuriamoci che l'input non copra l'occhio e abbia spazio a destra */
+#password.pf-c-form-control {
+    padding-right: 48px !important; /* Spazio per non far finire i puntini sotto l'occhio */
+    position: relative !important;
+    z-index: 1 !important; /* Più basso dell'occhio (999) */
+}
+
+.pf-c-form__label.pf-c-form__label-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* =========================
+   5. INPUT (Focus con ombra accennata)
+========================= */
+
+#kc-form-login input:not([type='submit']):focus {
+    /* 1. Pulizia bordo default browser */
+    outline: none !important;
+
+    /* 2. Colore del bordo (Rosso ADHR pieno) */
+    border-color: #a1000e !important;
+
+    /* 3. L'ombra appena accennata (Box Shadow) */
+    /* Sintassi: x | y | sfocatura | espansione | colore (RGBA per la trasparenza) */
+    box-shadow: 0 0 0 3px rgba(161, 0, 14, 0.12) !important;
+
+    /* 4. Transizione morbida (già accennata nel tuo codice, assicurati che ci sia) */
+    transition:
+        border-color 0.2s ease-in-out,
+        box-shadow 0.2s ease-in-out;
+}
+
+/* Stato normale: l'occhio è a destra (0 o 5px) */
+.pf-c-button.pf-m-control {
+    right: 5px !important;
+    transition: right 0.2s ease; /* Transizione fluida se l'errore appare dinamicamente */
+}
+
+/* Stato Errore: l'occhio "fa spazio" al punto esclamativo */
+/* Il selettore ~ trova l'occhio che segue l'input invalido */
+#password[aria-invalid='true'] ~ .pf-c-button.pf-m-control {
+    right: 35px !important; /* Lo spostiamo di circa 30-35px a sinistra */
+}
+
+.pf-c-input-group__icon.pf-m-error,
+.pf-c-form-control__icon.pf-m-error {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #c9190b !important; /* Rosso Errore Standard */
+    pointer-events: none; /* L'utente non deve poterla cliccare */
+    z-index: 15;
+}
+
+#password.pf-c-form-control[aria-invalid='true'] {
+    padding-right: 70px !important; /* Spazio per Occhio (40px) + Errore (30px) */
+}

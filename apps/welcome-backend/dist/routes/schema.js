@@ -1,4 +1,4 @@
-"use strict";
+'use strict'
 /**
  *      @SERIALIZZAZIONE_RISPOSTA
  *
@@ -30,14 +30,14 @@
  *      è violato (a meno di errori catastrofici di parsing), ma si limita a "tagliare" i dati per
  *      farli combaciare con lo schema definito.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RootResponseSchema = void 0;
-const typebox_1 = require("@sinclair/typebox");
+Object.defineProperty(exports, '__esModule', { value: true })
+exports.RootResponseSchema = void 0
+const typebox_1 = require('@sinclair/typebox')
 exports.RootResponseSchema = typebox_1.Type.Object({
     status: typebox_1.Type.String(), // Obbligatorio
     message: typebox_1.Type.String(), // Obbligatorio
-    errorCode: typebox_1.Type.Optional(typebox_1.Type.Number()) // Opzionale
-});
+    errorCode: typebox_1.Type.Optional(typebox_1.Type.Number()), // Opzionale
+})
 // ESEMPIO
 // fastify.get('/utente', {
 //   schema: {
