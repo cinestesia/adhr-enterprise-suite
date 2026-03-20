@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/useAuth'
 import Image from 'next/image'
+import { signOut, useSession } from 'next-auth/react'
 
 const items = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -43,6 +44,28 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
+  const { data: session } = useSession()
+  
+const handleLogout = async () => {
+    const res = await fetch('/api/auth/logout')
+    const { idToken } = await res.json()
+    
+    console.log("idToken ricevuto:", idToken)
+    
+    const issuer = process.env.NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER
+    const redirectUri = encodeURIComponent(window.location.origin + "/")
+    
+    const logoutUrl = 
+        `${issuer}/protocol/openid-connect/logout` +
+        `?post_logout_redirect_uri=${redirectUri}` +
+        `&id_token_hint=${idToken}`
+    
+    console.log("logoutUrl:", logoutUrl)
+    
+    await signOut({ redirect: false })
+    window.location.href = logoutUrl
+}
+
   return (
     <Sidebar
       variant="sidebar"
@@ -165,7 +188,9 @@ export function AppSidebar() {
                 <hr className="my-2 border-zinc-100" />
                 <DropdownMenuItem className="gap-3 cursor-pointer py-3 rounded-lg focus:bg-red-50 text-[#EC010C] focus:text-[#EC010C]">
                   <LogOut className="size-5" />
-                  <span className="font-bold">Disconnetti</span>
+                  <span
+                    onClick={ handleLogout } 
+                    className="font-bold">Disconnetti</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
