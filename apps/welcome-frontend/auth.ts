@@ -15,12 +15,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // invocato ogni volta che viene creato o aggiornato un JWT. Contiene tutte le informazioni
         // è il (Il caveau dei dati grezzi che arrivano da keycloak )
         // Quello che ritorni sarà disponibile in token
-        async jwt({ session, token, account, profile }) {
+        // sync jwt({ session, token, account, profile })  
+        async jwt({token, account}) {
             console.log('ACCOUNT', account)
             return token
         },
 
-        // Parti da token e decori ulteriormente per passare auth.user
+        // Parti da token qui sopra, e decori ulteriormente per passare auth.user
         async session({ session, token }) {
             // Qui in futuro aggiungerai i ruoli ADHR estratti dal token
             return session
