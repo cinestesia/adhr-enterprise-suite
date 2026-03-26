@@ -43,7 +43,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Se hai bisogno di logica server-side al logout
         }        
     },
-
+    // Senza pages: Se provi a fare il login, NextAuth ti mostra una pagina grigia standard con un bottone 
+    // "Sign in with Keycloak".
     pages: {
         signIn: '/login', // Forza l'uso dell'endpoint di login
     },

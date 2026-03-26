@@ -63,6 +63,12 @@ spec:
                 - name: {{ .Release.Name }}
                   image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
                   imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+
+                  # AGGIUNGI DA QUI:
+                  resources:
+                    {{- toYaml .Values.resources | nindent 20 }}
+                  # FINE AGGIUNTA
+
                   ports:
                       - containerPort: {{ .Values.service.port }}
                         name: http # <== ALIAS DI AGGANCIO AL SEWRVICE

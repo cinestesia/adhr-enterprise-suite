@@ -131,11 +131,11 @@ spec:
                       failureThreshold: 3
                   resources:
                       limits:
-                          cpu: 2000m
-                          memory: 2000Mi
+                          cpu: 500m # da 2000m a 500m
+                          memory: 1000Mi # da 2000Mi a 1000Mi
                       requests:
-                          cpu: 500m
-                          memory: 1700Mi
+                          cpu: 100m # Da 500m l'ho passato a 100m
+                          memory: 600Mi # Da 1700Mi a 600Mi (il minimo per far girare Quarkus decentemente)
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
