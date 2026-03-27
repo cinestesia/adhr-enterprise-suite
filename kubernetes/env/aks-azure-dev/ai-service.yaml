@@ -1,0 +1,48 @@
+# Sezione Probes
+probes:
+  # Questa è la prima sonda a partire, fincheè questa non risponde le altre non vengono interpellate. 
+  startup:
+    path: /ai/health
+    failureThreshold: 30 # Tentativi prima di considerarlo morto. 
+    periodSeconds: 5 # Ogni 5 secondi
+
+  # Questa è la seconda sonda a partire: Entra in gioco solo dopo che la Startup ha avuto successo. 
+  # Serve a rilevare se il processo Node.js è andato in "freeze" (loop infinito o memoria esaurita).
+  # Se questa sonda fallisce (solitamente 3 volte di fila per default), Kubernetes uccide e riavvia il container.
+  liveness:
+    path: /ai/health
+    initialDelaySeconds: 10 # aspetta 10 secondi dopo che la Startup ha finito prima di iniziare i controlli.
+    periodSeconds: 20 # Kubernetes controllerà ogni 20 secondi.
+  
+  # Questa sonda decide se il traffico degli utenti (tramite il Service) deve arrivare al Pod o no.
+  # periodSeconds: 10: Controlla ogni 10 secondi.
+  # Se questa sonda fallisce (magari perché LocalAI è sovraccarico), il Pod non viene ucciso, ma viene 
+  # temporaneamente isolato. Gli utenti non verranno mandati a quel Pod finché non torna a rispondere 
+  # correttamente.
+  readiness:
+    path: /ai/health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+
+# Appena il Pod nasce, parte solo la Startup Probe.
+# Ogni 5 secondi chiama /ai/health.
+# Se l'app risponde "404" o non risponde affatto, Kubernetes aspetta e riprova.
+# Importante: In questa fase, Liveness e Readiness sono "addormentate". Kubernetes non controlla se l'app è pronta per gli utenti, sta solo aspettando che "si svegli".
+
+# "Momento del Successo"
+# Appena /ai/health risponde 200 OK per la prima volta:
+
+# La Startup Probe ha finito il suo lavoro. Smette di essere invocata. Non verrà mai più chiamata per tutta la 
+# vita di quel Pod.
+
+# Liveness e Readiness si "svegliano" contemporaneamente e iniziano i loro cicli infiniti.
+
+# Fase Operativa (Liveness & Readiness)
+# Da questo momento in poi, il controllo procede così:
+
+# Ogni 10 secondi: La Readiness bussa a /ai/health. Se risponde OK, il Pod riceve traffico dagli utenti. 
+# Se fallisce, il Service "stacca la spina" a quel Pod (ma non lo uccide).
+
+# Ogni 20 secondi: La Liveness bussa a /ai/health. Finché risponde OK, tutto bene. Se fallisce per 3 volte 
+# di fila (il default), Kubernetes uccide il Pod e ne crea uno nuovo da zero.

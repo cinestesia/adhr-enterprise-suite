@@ -31,8 +31,15 @@ export default auth((req) => {
  * next static / image
  * favicon
  * file statici (.png, .jpg, .jpeg, .svg, .webp, .ico) */
+// export const config = {
+//     matcher: [
+//         '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.webp|.*\\.ico).*)',
+//     ],
+// }
+
 export const config = {
     matcher: [
-        '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.webp|.*\\.ico).*)',
+        // Ho aggiunto api/health all'inizio della lista delle eccezioni (dentro la parentesi ?!)
+        '/((?!api/health|api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.webp|.*\\.ico).*)',
     ],
 }

@@ -66,5 +66,5 @@ spec:
     app: localai
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8080
+      port: 80 # I pod che vogliono raggiungere questo servizio utilizzano questa porta. 
+      targetPort: 8080 # dentro il pods il componente gira alla porta 8080 ( localai ) 
