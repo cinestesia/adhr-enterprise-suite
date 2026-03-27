@@ -1,27 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
-   
-    name: {{ .Release.Name }} # <== welcome-frontend
-
+    name: {{ .Release.Name }}
     labels:
-        app: {{ .Release.Name }} # Il componente specifico (es. welcome-frontend)
-        part-of: adhr-enterprise-suite # La suite di appartenenza
-        env: {{ .Values.ambiente | default "development" }} # L'ambiente (preso dal file in /env)
-        version: {{ .Values.image.tag | quote }} # La release specifica
-        managed-by: {{ .Release.Service }} # Indica che è gestito da Helm
-
+        app: {{ .Release.Name }}
+        part-of: adhr-enterprise-suite
+        env: {{ .Values.ambiente | default "development" }}
+        version: {{ .Values.image.tag | quote }}
+        managed-by: {{ .Release.Service }}
 spec:
     replicas: {{ .Values.replicaCount }}
-
     selector:
         matchLabels:
-            app: {{ .Release.Name }} # <== welcome-frontend
-
+            app: {{ .Release.Name }}
     template:
         metadata:
-            # Qui mettiamo labels più specifiche per IDENTIFICARE I PODS
             labels:
                 app: {{ .Release.Name }}
                 env: {{ .Values.ambiente | default "development" }}
@@ -37,38 +30,38 @@ spec:
 
                   ports:
                       - containerPort: {{ .Values.service.port }}
-                        name: http # 
+                        name: http
 
-                    # --- SEZIONE VARIABILI D'AMBIENTE ---
                   env:
-                  {{- range $key, $val := .Values.env }}
-                    - name: {{ $key }}
-                      value: {{ $val | quote }}
-                  {{- end }}
-                  
-                  {{- range $key, $val := .Values.secretEnv }}
-                    - name: {{ $key }}
-                      value: {{ $val | quote }}
-                  {{- end }}
+                      {{- range $key, $val := .Values.env }}
+                      - name: {{ $key }}
+                        value: {{ $val | quote }}
+                      {{- end }}
+                      {{- range $key, $val := .Values.secretEnv }}
+                      - name: {{ $key }}
+                        value: {{ $val | quote }}
+                      {{- end }}
 
-                  # --- SEZIONE PROBES PARAMETRICA CORRETTA ---
-                  livenessProbe: 
-                    httpGet:
-                        path: {{ .Values.probes.liveness.path | default "/api/health" }}
-                        port: http
-                    initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds | default 15 }}
-                    periodSeconds: {{ .Values.probes.liveness.periodSeconds | default 20 }}
+                  # --- SEZIONE PROBES CON CONTROLLO DI SICUREZZA ---
+                  {{- if .Values.probes }}
+                  livenessProbe:
+                      httpGet:
+                          path: {{ .Values.probes.liveness.path | default "/api/health" }}
+                          port: http
+                      initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds | default 15 }}
+                      periodSeconds: {{ .Values.probes.liveness.periodSeconds | default 20 }}
 
                   readinessProbe:
-                    httpGet:
-                        path: {{ .Values.probes.readiness.path | default "/api/health" }}
-                        port: http
-                    initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds | default 5 }}
-                    periodSeconds: {{ .Values.probes.readiness.periodSeconds | default 10 }}
+                      httpGet:
+                          path: {{ .Values.probes.readiness.path | default "/api/health" }}
+                          port: http
+                      initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds | default 5 }}
+                      periodSeconds: {{ .Values.probes.readiness.periodSeconds | default 10 }}
 
                   startupProbe:
-                    httpGet:
-                        path: {{ .Values.probes.startup.path | default "/api/health" }}
-                        port: http
-                    failureThreshold: {{ .Values.probes.startup.failureThreshold | default 30 }}
-                    periodSeconds: {{ .Values.probes.startup.periodSeconds | default 5 }}
+                      httpGet:
+                          path: {{ .Values.probes.startup.path | default "/api/health" }}
+                          port: http
+                      failureThreshold: {{ .Values.probes.startup.failureThreshold | default 30 }}
+                      periodSeconds: {{ .Values.probes.startup.periodSeconds | default 5 }}
+                  {{- end }}

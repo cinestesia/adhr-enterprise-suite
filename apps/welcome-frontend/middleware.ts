@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 // console.log("CIAOOO")
 export default auth((req) => {
     const { nextUrl } = req
-    const isLoggedIn = !!req.auth?.user // NextAuth mette l'utente in req.auth.user
+    const isLoggedIn = !!req.auth?.user // NextAuth mette l'utente in req.auth.user dome
 
     console.log('USER:', req.auth?.user)
     // Rotte pubbliche
