@@ -43,7 +43,7 @@ jobs:
                   # puoi passarle qui come build-args.
                   # Se servono solo a RUNTIME, gestiscile tramite Helm.
                   build-args: |
-                    NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER=http://auth.4.232.3.98.nip.io/realms/internal-adhr
+                      NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER=http://auth.4.232.3.98.nip.io/realms/internal-adhr
             - name: Set AKS Context
               uses: azure/aks-set-context@v3
               with:

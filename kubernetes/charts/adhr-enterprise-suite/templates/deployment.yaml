@@ -24,14 +24,11 @@ spec:
                 - name: {{ .Release.Name }}
                   image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
                   imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-
                   resources:
-                    {{- toYaml .Values.resources | nindent 20 }}
-
+                    {{- toYaml .Values.resources | nindent 22 }}
                   ports:
                       - containerPort: {{ .Values.service.port }}
                         name: http
-
                   env:
                       {{- range $key, $val := .Values.env }}
                       - name: {{ $key }}
@@ -41,7 +38,6 @@ spec:
                       - name: {{ $key }}
                         value: {{ $val | quote }}
                       {{- end }}
-
                   # --- SEZIONE PROBES CON CONTROLLO DI SICUREZZA ---
                   {{- if .Values.probes }}
                   livenessProbe:

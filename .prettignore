@@ -4,5 +4,8 @@ dist
 build
 pnpm-lock.yaml
 .next
-templates/*.yaml
-templates/**/*.yaml
+
+# Esclude tutti i file .yaml o .tpl dentro qualsiasi cartella "templates" nel monorepo
+**/templates/**/*.yaml
+**/templates/**/*.yml
+**/templates/**/*.tpl

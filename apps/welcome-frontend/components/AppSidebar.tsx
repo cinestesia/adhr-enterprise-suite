@@ -45,26 +45,26 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
   const { data: session } = useSession()
-  
-const handleLogout = async () => {
+
+  const handleLogout = async () => {
     const res = await fetch('/api/auth/logout')
     const { idToken } = await res.json()
-    
-    console.log("idToken ricevuto:", idToken)
-    
+
+    console.log('idToken ricevuto:', idToken)
+
     const issuer = process.env.NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER
-    const redirectUri = encodeURIComponent(window.location.origin + "/")
-    
-    const logoutUrl = 
-        `${issuer}/protocol/openid-connect/logout` +
-        `?post_logout_redirect_uri=${redirectUri}` +
-        `&id_token_hint=${idToken}`
-    
-    console.log("logoutUrl:", logoutUrl)
-    
+    const redirectUri = encodeURIComponent(window.location.origin + '/')
+
+    const logoutUrl =
+      `${issuer}/protocol/openid-connect/logout` +
+      `?post_logout_redirect_uri=${redirectUri}` +
+      `&id_token_hint=${idToken}`
+
+    console.log('logoutUrl:', logoutUrl)
+
     await signOut({ redirect: false })
     window.location.href = logoutUrl
-}
+  }
 
   return (
     <Sidebar
@@ -158,9 +158,9 @@ const handleLogout = async () => {
                   size="lg"
                   className="hover:bg-zinc-200/50 transition-all rounded-xl border border-transparent hover:border-zinc-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0"
                 >
-                <div className="flex items-center justify-center rounded-full bg-[#A00407]/10 border border-[#A00407]/20 p-2 shrink-0">
-                  <User2 className="size-5 text-[#A00407]" />
-                </div>
+                  <div className="flex items-center justify-center rounded-full bg-[#A00407]/10 border border-[#A00407]/20 p-2 shrink-0">
+                    <User2 className="size-5 text-[#A00407]" />
+                  </div>
                   <div className="flex flex-col items-start text-sm group-data-[collapsible=icon]:hidden ml-3">
                     <span className="font-bold text-zinc-800 truncate w-32">
                       {user?.name}
@@ -188,9 +188,9 @@ const handleLogout = async () => {
                 <hr className="my-2 border-zinc-100" />
                 <DropdownMenuItem className="gap-3 cursor-pointer py-3 rounded-lg focus:bg-red-50 text-[#EC010C] focus:text-[#EC010C]">
                   <LogOut className="size-5" />
-                  <span
-                    onClick={ handleLogout } 
-                    className="font-bold">Disconnetti</span>
+                  <span onClick={handleLogout} className="font-bold">
+                    Disconnetti
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

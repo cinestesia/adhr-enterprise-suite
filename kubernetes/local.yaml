@@ -1,8 +1,0 @@
-# env/local.yaml
-image:
-    repository: welcome-frontend
-    tag: 'latest'
-    pullPolicy: IfNotPresent
-
-service:
-    port: 3000

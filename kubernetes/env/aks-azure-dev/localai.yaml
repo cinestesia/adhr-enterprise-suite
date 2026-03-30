@@ -1,70 +1,70 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: localai-models-pvc
-  namespace: development # Allineato alla tua suite
-  labels:
-    Project: AdhrEnterpriseSuite
-    Owner: SistemiInformativi
+    name: localai-models-pvc
+    namespace: development # Allineato alla tua suite
+    labels:
+        Project: AdhrEnterpriseSuite
+        Owner: SistemiInformativi
 spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: default
-  resources:
-    requests:
-      storage: 20Gi
+    accessModes:
+        - ReadWriteOnce
+    storageClassName: default
+    resources:
+        requests:
+            storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: localai
-  namespace: development
-  labels:
-    Project: AdhrEnterpriseSuite
-    Owner: SistemiInformativi
+    name: localai
+    namespace: development
+    labels:
+        Project: AdhrEnterpriseSuite
+        Owner: SistemiInformativi
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: localai
-  template:
-    metadata:
-      labels:
-        app: localai
-        Project: AdhrEnterpriseSuite # Tag per tracciamento pod
-    spec:
-      containers:
-        - name: localai
-          image: localai/localai:latest-aio-cpu
-          resources:
-            requests:
-              cpu: "300m"
-              memory: "1800Mi"
-            limits:
-              cpu: "1000m" # Limitiamo per non saturare la tua B2s (2 vCPU)
-              memory: "2500Mi"
-          env:
-            - name: MODELS_PATH
-              value: "/models"
-            - name: THREADS
-              value: "2"
-          volumeMounts:
-            - name: models
-              mountPath: /models
-      volumes:
-        - name: models
-          persistentVolumeClaim:
-            claimName: localai-models-pvc
+    replicas: 1
+    selector:
+        matchLabels:
+            app: localai
+    template:
+        metadata:
+            labels:
+                app: localai
+                Project: AdhrEnterpriseSuite # Tag per tracciamento pod
+        spec:
+            containers:
+                - name: localai
+                  image: localai/localai:latest-aio-cpu
+                  resources:
+                      requests:
+                          cpu: '300m'
+                          memory: '1800Mi'
+                      limits:
+                          cpu: '1000m' # Limitiamo per non saturare la tua B2s (2 vCPU)
+                          memory: '2500Mi'
+                  env:
+                      - name: MODELS_PATH
+                        value: '/models'
+                      - name: THREADS
+                        value: '2'
+                  volumeMounts:
+                      - name: models
+                        mountPath: /models
+            volumes:
+                - name: models
+                  persistentVolumeClaim:
+                      claimName: localai-models-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: localai-service
-  namespace: development
+    name: localai-service
+    namespace: development
 spec:
-  selector:
-    app: localai
-  ports:
-    - protocol: TCP
-      port: 80 # I pod che vogliono raggiungere questo servizio utilizzano questa porta. 
-      targetPort: 8080 # dentro il pods il componente gira alla porta 8080 ( localai ) 
+    selector:
+        app: localai
+    ports:
+        - protocol: TCP
+          port: 80 # I pod che vogliono raggiungere questo servizio utilizzano questa porta.
+          targetPort: 8080 # dentro il pods il componente gira alla porta 8080 ( localai )

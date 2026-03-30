@@ -105,7 +105,7 @@ import Image from 'next/image'
  *
  * Insieme: "Prendi tutto lo spazio che trovi (flex-1), se il contenuto esce dai bordi fammi scrollare verso il basso
  * (overflow-y-auto) e colorami con un leggerissimo tocco del colore secondario del brand (bg-secondary/10)."
- * 
+ *
  */
 
 export default function DashboardLayout({
