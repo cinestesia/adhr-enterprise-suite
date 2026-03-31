@@ -28,9 +28,7 @@ export default function RootLayout({
   return (
     // Aggiungiamo suppressHydrationWarning per evitare errori col ThemeSwitch
     <html lang="it" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionWrapper>
           <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
         </SessionWrapper>

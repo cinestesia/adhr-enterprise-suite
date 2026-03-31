@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
     name: localai-models-pvc
-    namespace: development
+    namespace: development # Allineato alla tua suite
     labels:
         Project: AdhrEnterpriseSuite
         Owner: SistemiInformativi
@@ -31,30 +31,23 @@ spec:
         metadata:
             labels:
                 app: localai
-                Project: AdhrEnterpriseSuite
+                Project: AdhrEnterpriseSuite # Tag per tracciamento pod
         spec:
             containers:
                 - name: localai
-                  # Cambio immagine: 'latest-cpu' è molto più leggera della 'aio'
-                  image: localai/localai:latest-cpu
+                  image: localai/localai:latest-aio-cpu
                   resources:
                       requests:
-                          cpu: '500m'
-                          memory: '2000Mi'
+                          cpu: '300m'
+                          memory: '1800Mi'
                       limits:
-                          cpu: '1000m'
-                          memory: '2600Mi' # Leggero aumento per dare un filo di respiro in più
+                          cpu: '1000m' # Limitiamo per non saturare la tua B2s (2 vCPU)
+                          memory: '2500Mi'
                   env:
                       - name: MODELS_PATH
                         value: '/models'
                       - name: THREADS
-                        value: '1' # 1 Thread = 1 CPU. Evita "ingorghi" di calcolo.
-                      - name: CONTEXT_SIZE
-                        value: '512' # CRUCIALE: dimezza l'uso della RAM per i messaggi.
-                      - name: F16_KV
-                        value: 'false' # Risparmia ulteriore memoria.
-                      - name: GALLERIES
-                        value: '[]' # Disabilita download automatici all'avvio.
+                        value: '2'
                   volumeMounts:
                       - name: models
                         mountPath: /models
@@ -73,5 +66,5 @@ spec:
         app: localai
     ports:
         - protocol: TCP
-          port: 80
-          targetPort: 8080
+          port: 80 # I pod che vogliono raggiungere questo servizio utilizzano questa porta.
+          targetPort: 8080 # dentro il pods il componente gira alla porta 8080 ( localai )

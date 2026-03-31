@@ -6,15 +6,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-} from 'recharts'
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts'
 import {
   Users,
   Briefcase,
@@ -31,7 +23,7 @@ const apps = [
     description: 'AI Agent',
     icon: Users,
     color: 'bg-[#A00407]',
-    url: '/ai-agent',
+    url: '/ai-agent-and-chatbot',
     status: 'Active',
   },
 
@@ -119,9 +111,7 @@ export default function HubPage() {
                   {/* Text Content */}
                   <div className="flex-1 pr-8">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-xl text-zinc-900">
-                        {app.title}
-                      </h3>
+                      <h3 className="font-bold text-xl text-zinc-900">{app.title}</h3>
                       {app.status === 'Upcoming' && (
                         <span className="text-[10px] bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded uppercase font-black">
                           Presto
@@ -152,12 +142,8 @@ export default function HubPage() {
         {/* Usage Chart */}
         <Card className="lg:col-span-2 border-none shadow-sm bg-white">
           <CardHeader>
-            <CardTitle className="text-lg">
-              Volume Operazioni (Settimanali)
-            </CardTitle>
-            <CardDescription>
-              Attività aggregata di tutta la Suite
-            </CardDescription>
+            <CardTitle className="text-lg">Volume Operazioni (Settimanali)</CardTitle>
+            <CardDescription>Attività aggregata di tutta la Suite</CardDescription>
           </CardHeader>
           <CardContent className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">

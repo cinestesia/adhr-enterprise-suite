@@ -33,9 +33,7 @@ import { Static } from '@sinclair/typebox'
 export declare const RootResponseSchema: import('@sinclair/typebox').TObject<{
     status: import('@sinclair/typebox').TString
     message: import('@sinclair/typebox').TString
-    errorCode: import('@sinclair/typebox').TOptional<
-        import('@sinclair/typebox').TNumber
-    >
+    errorCode: import('@sinclair/typebox').TOptional<import('@sinclair/typebox').TNumber>
 }>
 export type RootResponse = Static<typeof RootResponseSchema>
 //# sourceMappingURL=schema.d.ts.map

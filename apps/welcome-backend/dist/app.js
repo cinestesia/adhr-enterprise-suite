@@ -30,10 +30,7 @@ async function start() {
         await fastify.register(env_1.default, {
             schema: env_2.EnvSchema,
             dotenv: {
-                path: path_1.default.resolve(
-                    process.cwd(),
-                    `.env.${currentEnv}`
-                ),
+                path: path_1.default.resolve(process.cwd(), `.env.${currentEnv}`),
                 debug: true,
             },
         })
