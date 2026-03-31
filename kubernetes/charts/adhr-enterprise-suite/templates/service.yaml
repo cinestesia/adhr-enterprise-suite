@@ -2,11 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
     # Il nome del service deve essere prevedibile (es. welcome-backend)
-    name: { { .Release.Name } }
+    name: {{ .Release.Name }}
     labels:
-        app: { { .Release.Name } }
+        app: {{ .Release.Name }}
         part-of: adhr-enterprise-suite
-        env: { { .Values.ambiente | default "development" } }
+        env: {{ .Values.ambiente | default "development" }}
 spec:
     # ClusterIP. È lo standard perché rende l'app raggiungibile solo dentro il cluster.
     # Sarà poi l'Ingress ad aprirla al mondo esterno.
@@ -21,4 +21,4 @@ spec:
           name: http
     selector:
         # Fondamentale: deve matchare ESATTAMENTE le labels del template dei Pod nel Deployment
-        app: { { .Release.Name } }
+        app: {{ .Release.Name }}
