@@ -64,5 +64,6 @@ jobs:
                     --set env.AUTH_TRUST_HOST="true" \
                     --set env.NEXTAUTH_URL="http://frontend.4.232.3.98.nip.io" \
                     --set env.NEXT_PUBLIC_NODE_ENV="development" \
+                    --set env.AI_BACKEND_URL="http://ai-backend" \
                     --set secretEnv.AUTH_KEYCLOAK_SECRET="${{ secrets.WELCOME_KEYCLOAK_SECRET }}" \
                     --set secretEnv.AUTH_SECRET="${{ secrets.WELCOME_AUTH_SECRET }}"

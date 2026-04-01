@@ -5,9 +5,9 @@ RUN npm install -g turbo
 COPY . .
 
 # Dammi una versione ridotta del monorepo contenente solo ciò che serve per 
-# buildare @adhr/ai-service, ottimizzata per Docker."
+# buildare @adhr/ai, ottimizzata per Docker."
 
-RUN turbo prune --scope=@adhr/welcome-backend --docker
+RUN turbo prune --scope=@adhr/ai-backend --docker
 
 # Genera una cartella out/ con:
 # out/
@@ -35,7 +35,7 @@ RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full .
 
 # 4. Builda il progetto usando turbo (sfruttando la cache se possibile)
-RUN turbo build --filter=@adhr/welcome-backend
+RUN turbo build --filter=@adhr/ai-backend
 
 # --- STAGE 3: RUNNER ------------------------------------------------------------------
 FROM node:20-alpine AS runner 
@@ -57,12 +57,12 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # 3. Copia i file compilati dallo stage BUILDER
 # Qui devi puntare a dove il comando 'turbo build' ha creato la cartella dist
-COPY --from=builder /app/apps/welcome-backend/dist ./apps/welcome-backend/dist
+COPY --from=builder /app/apps/ai-backend/dist ./apps/ai-backend/dist
 
 USER fastify
 
-EXPOSE 3001
-ENV PORT=3001
+EXPOSE 3002
+ENV PORT=3002
 
 # 4. Avvia
-CMD ["node", "apps/welcome-backend/dist/app.js"]
+CMD ["node", "apps/ai-backend/dist/app.js"]

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useRef } from 'react'
 import { Paperclip, Send, Bot, User, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -37,18 +36,74 @@ export default function AIAgentAndChatbot() {
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
     setIsLoading(true)
 
-    // Simuliamo lo stream (da attaccare poi alla fetch reale)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content:
-            'Ricevuto! Sto elaborando la tua richiesta con i dati in mio possesso...',
-        },
-      ])
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
+      })
+
+      if (!response.body) return
+      
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      
+      // Prepariamo il messaggio vuoto dell'AI
+      setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+
+      // 1. Questa variabile accumulerà tutto il testo pulito dell'AI man mano che arriva
+      let fullResponseText = ''
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.replace('data: ', '').trim()
+            if (jsonStr === '[DONE]') continue
+            
+            try {
+              const data = JSON.parse(jsonStr)
+              
+              let token = ''
+              // Estraiamo il testo a seconda di come risponde il tuo backend
+              if (data.text) {
+                token = data.text
+              } else if (data.content) {
+                token = data.content
+              }
+
+              // 2. Se abbiamo trovato del testo nuovo...
+              if (token) {
+                // Lo aggiungiamo al nostro accumulatore esterno
+                fullResponseText += token
+
+                setMessages((prev) => {
+                  const updated = [...prev]
+                  const lastIndex = updated.length - 1
+                  
+                  // 3. Rimpiazziamo l'intero contenuto dell'ultimo messaggio!
+                  // Invece di fare += (che sdoppiava le parole), sovrascriviamo con la stringa completa
+                  updated[lastIndex].content = fullResponseText
+                  
+                  return updated
+                })
+              }
+            } catch (e) {
+              // Ignoriamo i chunk incompleti tipici di SSE
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Errore durante la chat:', error)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

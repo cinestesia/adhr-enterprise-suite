@@ -10,7 +10,7 @@ service:
 ingress:
     enabled: true
     # In staging/dev spesso si usa un sottodominio
-    host: 'api.4.232.3.98.nip.io'
+    host: 'apiai.4.232.3.98.nip.io'
     annotations:
         kubernetes.io/ingress.class: nginx
         # Azure specifico: permette di gestire il load balancer correttamente

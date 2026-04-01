@@ -1,4 +1,3 @@
-// apps/ai-service/src/types/fastify.d.ts
 import 'fastify'
 import { ChatController } from '@/interfaces/http/controllers/chat.controller'
 

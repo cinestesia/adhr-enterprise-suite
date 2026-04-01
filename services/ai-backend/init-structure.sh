@@ -1,0 +1,1 @@
+mkdir -p ../../apps/ai-backend/src/domain/services ../../apps/ai-backend/src/domain/models ../../apps/ai-backend/src/infrastructure/ai ../../apps/ai-backend/src/infrastructure/db ../../apps/ai-backend/src/application/use-cases ../../apps/ai-backend/src/routes && touch ../../apps/ai-backend/src/app.ts

@@ -42,21 +42,21 @@ spec:
                   {{- if .Values.probes }}
                   livenessProbe:
                       httpGet:
-                          path: {{ .Values.probes.liveness.path | default "/api/health" }}
+                          path: {{ .Values.probes.liveness.path | default "/health" }}
                           port: http
                       initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds | default 15 }}
                       periodSeconds: {{ .Values.probes.liveness.periodSeconds | default 20 }}
 
                   readinessProbe:
                       httpGet:
-                          path: {{ .Values.probes.readiness.path | default "/api/health" }}
+                          path: {{ .Values.probes.readiness.path | default "/health" }}
                           port: http
                       initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds | default 5 }}
                       periodSeconds: {{ .Values.probes.readiness.periodSeconds | default 10 }}
 
                   startupProbe:
                       httpGet:
-                          path: {{ .Values.probes.startup.path | default "/api/health" }}
+                          path: {{ .Values.probes.startup.path | default "/health" }}
                           port: http
                       failureThreshold: {{ .Values.probes.startup.failureThreshold | default 30 }}
                       periodSeconds: {{ .Values.probes.startup.periodSeconds | default 5 }}

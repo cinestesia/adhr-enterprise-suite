@@ -7,11 +7,11 @@ service:
     port: 3000
 
 config:
-    backendUrl: 'http://welcome.backend'
+    aiBackendUrl: 'http://ai-backend'
 
 ingress:
     enabled: true
-    host: 'frontend.4.232.3.98.nip.io'
+    host: 'welcome.4.232.3.98.nip.io'
 
 ambiente: azure
 replicaCount: 1

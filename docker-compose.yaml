@@ -34,6 +34,7 @@ services:
             AUTH_KEYCLOAK_ISSUER: ${AUTH_KEYCLOACK_ISSUER}
             WELCOME_AUTH_SECRET: ${WELCOME_AUTH_SECRET}
             WELCOME_AUTH_URL: ${WELCOME_AUTH_URL}
+            AI_BACKEND_URL: ${AI_BACKEND_URL}
 
         restart: unless-stopped
 
@@ -52,6 +53,27 @@ services:
         environment:
             HOSTNAME: 0.0.0.0
             PORT: 3001
+            NODE_ENV: ${NODE_ENV}
+            DATABASE_URL: ${DATABASE_URL}
+
+        restart: unless-stopped
+
+
+    ai-backend:
+        build:
+            context: .
+            dockerfile: apps/ai-backend/Dockerfile
+            args:
+                NODE_ENV: ${NODE_ENV}
+
+        image: ai-backend:${NODE_ENV:+$NODE_ENV-}latest
+        container_name: ai-backend
+        ports:
+            - '3002:3002'
+
+        environment:
+            HOSTNAME: 0.0.0.0
+            PORT: 3002
             NODE_ENV: ${NODE_ENV}
             DATABASE_URL: ${DATABASE_URL}
 

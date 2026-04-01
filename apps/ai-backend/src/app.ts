@@ -1,9 +1,9 @@
-// apps/ai-service/src/app.ts
 import fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifyEnv from '@fastify/env'
 import { diPlugin } from './plugins/di.plugin'
 import { chatRoutes } from '@/interfaces/http/routes/chat.routes'
+import { healthRoutes } from '@/interfaces/http/routes/health-routes'
 
 /**
  * @note
@@ -52,6 +52,7 @@ const start = async () => {
         })
 
         await app.register(diPlugin)
+        await app.register(healthRoutes) // Non serve prefissare, è solo /health
         await app.register(chatRoutes, { prefix: '/api/v1' })
 
         // Accediamo alle variabili tramite app.config (popolato dal plugin)

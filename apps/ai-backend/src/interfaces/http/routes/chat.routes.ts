@@ -1,5 +1,3 @@
-// apps/ai-service/src/routes/chat.routes.ts
-
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 
 import { ChatRequestSchema } from '@/domain/models/chat'

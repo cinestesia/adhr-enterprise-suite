@@ -1,1 +1,0 @@
-mkdir -p ../../apps/ai-service/src/domain/services ../../apps/ai-service/src/domain/models ../../apps/ai-service/src/infrastructure/ai ../../apps/ai-service/src/infrastructure/db ../../apps/ai-service/src/application/use-cases ../../apps/ai-service/src/routes && touch ../../apps/ai-service/src/app.ts
