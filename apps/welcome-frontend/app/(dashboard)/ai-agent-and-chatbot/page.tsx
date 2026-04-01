@@ -21,7 +21,7 @@ export default function AIAgentAndChatbot() {
     {
       role: 'assistant',
       content:
-        "Ciao! Sono l'assistente AI-ADHR GDPR FIRST. Come posso aiutarti oggi? Puoi farmi domande generali o caricarmi un file (CV / Documento) da analizzare.",
+        "Ciao! Sono l'assistente AI-ADHR GDPR FIRST! Come posso aiutarti oggi? Puoi farmi domande generali o caricarmi un file (CV / Documento) da analizzare.",
     },
   ])
   const [input, setInput] = useState('')

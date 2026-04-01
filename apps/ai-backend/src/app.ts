@@ -20,7 +20,7 @@ const app = fastify({
     },
 })
 
-// Definiamo lo schema delle variabili ambientali che l'app DEVE avere per funzionare
+// Definiamo adesso lo schema delle variabili ambientali che l'app DEVE avere per funzionare
 const schema = {
     type: 'object',
     properties: {
