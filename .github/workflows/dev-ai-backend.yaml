@@ -1,0 +1,68 @@
+name: Deploy AI Backend Dev
+
+on:
+    push:
+        branches: ['development']
+        paths:
+            # Ora ascolta solo le modifiche nella cartella del backend AI
+            - 'apps/ai-backend/**'
+            # Se modifichi i file di configurazione Helm, vuoi che il deploy riparta
+            - 'kubernetes/charts/adhr-enterprise-suite/**'
+            - 'kubernetes/env/aks-azure-dev/ai-backend.yaml'
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout del codice
+              uses: actions/checkout@v4
+
+            - name: Login su Azure
+              uses: azure/login@v2
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Login su ACR
+              run: |
+                  az acr login --name adhresregistry
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build e Push con Cache Turbo
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  # ⚠️ Qui punta al Dockerfile del backend
+                  file: ./apps/ai-backend/Dockerfile
+                  push: true
+                  # ⚠️ Tag specifico per l'immagine del backend
+                  tags: adhresregistry.azurecr.io/ai-backend:${{ github.sha }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  # Fastify di solito non ha bisogno di build-args (le variabili servono a runtime).
+                  # Se ne servono, decommenta e inseriscile qui sotto.
+                  # build-args: |
+                  #   VAR_NAME=value
+
+            - name: Set AKS Context
+              uses: azure/aks-set-context@v3
+              with:
+                  resource-group: ADHR-ENTERPRISE-SUITE
+                  cluster-name: adhr-es-eks-cluster
+
+            - name: Deploy via Helm
+              run: |
+                  # ⚠️ Qui usiamo il file values specifico per il backend se lo hai creato
+                  helm upgrade --install ai-backend ./kubernetes/charts/adhr-enterprise-suite \
+                    -f ./kubernetes/env/aks-azure-dev/ai-backend.yaml \
+                    --namespace development \
+                    --set image.repository=adhresregistry.azurecr.io/ai-backend \
+                    --set image.tag=${{ github.sha }} \
+                    --set env.ENVIRONMENT="development" \
+                    --set env.PORT="3002" \
+                    --set env.HOSTNAME="0.0.0.0" \
+                    --set env.AI_MODEL_NAME="qwen2.5-1.5b-instruct.gguf" \
+                    --set env.AI_BASE_URL="http://localai-service.development.svc.cluster.local:80/v1" \
+                    --set secretEnv.OPENAI_API_KEY="not_used_by_local_ai" \
+                    --set secretEnv.DATABASE_URL="${{ secrets.BACKEND_DATABASE_URL }}"

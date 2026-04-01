@@ -1,5 +1,5 @@
 import { Message } from '@/domain/models/chat'
-import { IterableReadableStream } from 'node_modules/@langchain/core/dist/utils/stream'
+import { IterableReadableStream } from '@langchain/core/utils/stream'
 
 export interface IAIGateway {
     /**

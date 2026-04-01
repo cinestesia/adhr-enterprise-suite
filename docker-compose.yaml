@@ -34,8 +34,8 @@ services:
             AUTH_KEYCLOAK_ISSUER: ${AUTH_KEYCLOACK_ISSUER}
             WELCOME_AUTH_SECRET: ${WELCOME_AUTH_SECRET}
             WELCOME_AUTH_URL: ${WELCOME_AUTH_URL}
-            AI_BACKEND_URL: ${AI_BACKEND_URL}
 
+            
         restart: unless-stopped
 
     welcome-backend:
@@ -72,9 +72,15 @@ services:
             - '3002:3002'
 
         environment:
-            HOSTNAME: 0.0.0.0
-            PORT: 3002
+            HOST: "0.0.0.0"
+            PORT: "3002"
             NODE_ENV: ${NODE_ENV}
-            DATABASE_URL: ${DATABASE_URL}
-
+            # Sovrascriviamo l'URL per farlo parlare con il port-forward sul tuo PC
+            AI_BASE_URL: "http://host.docker.internal:8080/v1"
+            # Queste vengono lette direttamente dal tuo .env.development
+            AI_MODEL_NAME: ${AI_MODEL_NAME}
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        
         restart: unless-stopped

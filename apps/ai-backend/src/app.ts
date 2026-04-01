@@ -23,7 +23,6 @@ const app = fastify({
 // Definiamo lo schema delle variabili ambientali che l'app DEVE avere per funzionare
 const schema = {
     type: 'object',
-    required: ['AI_BASE_URL', 'AI_MODEL_NAME'],
     properties: {
         PORT: { type: 'string', default: '3002' },
         HOST: { type: 'string', default: '0.0.0.0' },

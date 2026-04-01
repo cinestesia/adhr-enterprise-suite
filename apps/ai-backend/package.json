@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "dev": "NODE_ENV=development tsx watch src/app.ts",
-        "build": "tsc",
+        "build": "tsc && tsc-alias",
         "lint": "eslint src/**/*.ts",
         "start": "node dist/app.js"
     },

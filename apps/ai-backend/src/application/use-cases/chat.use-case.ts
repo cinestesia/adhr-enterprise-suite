@@ -1,5 +1,5 @@
 import { IAIGateway } from '@/domain/ports/ai-gateway.interface'
-import { IterableReadableStream } from 'node_modules/@langchain/core/dist/utils/stream'
+import { IterableReadableStream } from '@langchain/core/utils/stream'
 
 /**
  * @note
