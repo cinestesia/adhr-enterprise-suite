@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Toaster } from '@/components/ui/sonner' // Lo aggiungeremo tra poco
-import { TooltipProvider } from '@/components/ui/tooltip' // Importalo!
+import { Toaster } from '@/components/ui/sonner' 
+import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
 import SessionWrapper from '@/components/SessionWrapper'
 
@@ -26,7 +26,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+
     // Aggiungiamo suppressHydrationWarning per evitare errori col ThemeSwitch
+
     <html lang="it" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionWrapper>

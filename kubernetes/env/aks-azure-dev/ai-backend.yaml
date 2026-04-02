@@ -11,7 +11,7 @@ ingress:
     enabled: true
     host: 'ai-api.4.232.3.98.nip.io'
     # Rimosse tutte le annotazioni inutili!
-
+    whitelistSourceRange: "77.89.12.48/29" # Solo questo range IP può accedere all'ingress. Cambia con il tuo IP o range di IP.
 config:
     databaseUrl: '...'
 

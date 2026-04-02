@@ -67,3 +67,4 @@ jobs:
                     --set env.AI_BACKEND_URL="http://ai-backend" \
                     --set secretEnv.AUTH_KEYCLOAK_SECRET="${{ secrets.WELCOME_KEYCLOAK_SECRET }}" \
                     --set secretEnv.AUTH_SECRET="${{ secrets.WELCOME_AUTH_SECRET }}"
+                    --history-max 2 # Mantieni solo le ultime 2 release per risparmiare spazio su cluster

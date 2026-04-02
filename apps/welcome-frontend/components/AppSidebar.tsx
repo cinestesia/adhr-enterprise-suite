@@ -1,5 +1,6 @@
 'use client'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link' // <== IMPORTATO LINK PER NAVIGAZIONE VELOCE
 import {
   LayoutDashboard,
   Users,
@@ -36,7 +37,7 @@ import { signOut, useSession } from 'next-auth/react'
 
 const items = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Ricerca Personale', url: '/recruitment', icon: Users },
+  { title: 'Chatbot', url: '/ai-bot', icon: Users },
   { title: 'Gestione Clienti', url: '/clients', icon: Package },
   { title: 'Configurazioni', url: '/settings', icon: Settings },
 ]
@@ -49,9 +50,6 @@ export function AppSidebar() {
   const handleLogout = async () => {
     const res = await fetch('/api/auth/logout')
     const { idToken } = await res.json()
-
-    console.log('idToken ricevuto:', idToken)
-
     const issuer = process.env.NEXT_PUBLIC_AUTH_KEYCLOAK_ISSUER
     const redirectUri = encodeURIComponent(window.location.origin + '/')
 
@@ -59,8 +57,6 @@ export function AppSidebar() {
       `${issuer}/protocol/openid-connect/logout` +
       `?post_logout_redirect_uri=${redirectUri}` +
       `&id_token_hint=${idToken}`
-
-    console.log('logoutUrl:', logoutUrl)
 
     await signOut({ redirect: false })
     window.location.href = logoutUrl
@@ -72,21 +68,16 @@ export function AppSidebar() {
       collapsible="icon"
       className="border-r border-zinc-200 shadow-2xl"
     >
-      {/* HEADER: Potenziato per maggiore visibilità */}
       <SidebarHeader className="h-24 flex items-center justify-center border-b bg-white group-data-[collapsible=icon]:h-20 transition-all duration-300">
         <div className="flex items-center justify-center w-full px-4">
-          {/* Brand Box ESPANSO che occupa quasi tutto lo spazio */}
           <div
             className={`
-							flex flex-col items-center justify-center rounded-2xl shrink-0 transition-all duration-300
-							bg-[image:var(--background-image-adhr-gradient)] 
-							border border-white/20
-							/* Da aperta: grande e rettangolare */
-							h-20 w-full group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6
-					`}
+              flex flex-col items-center justify-center rounded-2xl shrink-0 transition-all duration-300
+              bg-[image:var(--background-image-adhr-gradient)] 
+              border border-white/20
+              h-20 w-full group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6
+          `}
           >
-            {/* LOGO (le testine e ADHR) */}
-
             <Image
               width={120}
               height={32}
@@ -94,11 +85,8 @@ export function AppSidebar() {
               alt="ADHR Logo"
               className="h-8 w-auto object-contain transition-all group-data-[collapsible=icon]:h-4"
             />
-
-            {/* SCRITTA SUITE APP (sotto il logo, visibile solo se aperta) */}
             <div className="flex flex-col items-center mt-2 group-data-[collapsible=icon]:hidden">
-              <div className="h-[1px] w-12 bg-white/30 mb-2" />{' '}
-              {/* Linea sottile decorativa */}
+              <div className="h-[1px] w-12 bg-white/30 mb-2" />
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/90 leading-tight">
                 Group Suite App
               </span>
@@ -106,6 +94,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
+      
       <SidebarContent className="bg-white">
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 px-4 mb-4">
@@ -114,14 +103,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {items.map((item) => {
-                const isActive = pathname === item.url
+                // LOGICA DI ATTIVAZIONE AVANZATA
+                const isActive = 
+                  pathname === item.url || 
+                  (item.url !== '/' && pathname.startsWith(item.url))
+
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      // Sostituiamo il "celestino" con varianti del rosso ADHR
                       className={`
                         transition-all duration-200 py-6 px-4
                         data-[active=true]:bg-[#A00407]/10 
@@ -130,7 +122,8 @@ export function AppSidebar() {
                         group-data-[collapsible=icon]:py-6
                       `}
                     >
-                      <a href={item.url} className="flex items-center gap-4">
+                      {/* Usato Link al posto di <a> */}
+                      <Link href={item.url} className="flex items-center gap-4">
                         <item.icon
                           className={`size-5 ${isActive ? 'text-[#A00407] stroke-[3px]' : 'text-zinc-500'}`}
                         />
@@ -139,7 +132,7 @@ export function AppSidebar() {
                         >
                           {item.title}
                         </span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )

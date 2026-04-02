@@ -1,20 +1,26 @@
+# scopo di questo file è dire: quando arriva traffico HTTP su questo dominio → mandalo a questo Service
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
     name: "{{ .Release.Name }}-ingress"
     annotations:
+        nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.whitelistSourceRange }}
         # Questa riga è fondamentale per far capire a Nginx come gestire i percorsi
+        # sto dicendo: caro Nginx se fai rewrite  manda tutto a / 
+        # il rewrite non è dewtto che avvegna.
+        # Avviene solo se il path è del tipo: path: /(.*) cioè cattura qualcosa 
+        # cioè se sotto mettessimo: path: /ciccio/(.*) allora il rewrite sarebbe: /ciccio/$1
         nginx.ingress.kubernetes.io/rewrite-target: /
         {{- with .Values.ingress.annotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
 spec:
-    ingressClassName: nginx # <== IL CONTROLLER
+    ingressClassName: nginx # <== IL CONTROLLER: usa nginx
     rules: # <=== LE REGOLE 
-        - host: {{ .Values.ingress.host | quote }}
+        - host: {{ .Values.ingress.host | quote }} # specificato in values.yaml, per es,: welcome.4.232.3.98.nip.io
           http:
               paths:
-                  - path: / # <== Tutti i path / 
+                  - path: / # <== path come:  /, /ciao, /ciccio ecc..  / => mandale a backend integre 
                     pathType: Prefix
                     backend:
                         service:
