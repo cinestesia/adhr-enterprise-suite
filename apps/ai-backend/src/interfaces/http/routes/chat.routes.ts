@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
-
 import { ChatRequestSchema } from '@/domain/models/chat'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 

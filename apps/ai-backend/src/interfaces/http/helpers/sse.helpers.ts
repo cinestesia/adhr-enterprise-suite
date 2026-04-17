@@ -7,7 +7,7 @@ export function initSSE(reply: FastifyReply) {
     reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
+        Connection: 'keep-alive', //ricevo token in tempo reale senza chiudere la connessione
     })
 }
 

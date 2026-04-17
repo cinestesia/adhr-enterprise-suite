@@ -8,7 +8,6 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     const aiAdapter = new LocalAIAdapter()
     const chatUseCase = new ChatUseCase(aiAdapter)
     const chatController = new ChatController(chatUseCase)
-
     fastify.decorate('chatController', chatController)
 })
 

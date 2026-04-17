@@ -2,84 +2,101 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-@custom-variant dark (&:is(.dark *));
 
-@theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --font-sans: var(--font-sans);
-    --font-mono: var(--font-geist-mono);
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+/*  
+    @FASE1 
 
-    /* Aggiungi questa riga in fondo al blocco @theme inline */
-    --background-image-adhr-gradient: linear-gradient(
-        to right,
-        var(--brand-adhr-dark),
-        var(--brand-adhr-light)
-    );
-}
+    Quando Next compila in progetto, viene eseguito layout.tsx e quindi vengono eseguite delle funzioni come 
+    Geist() ecc.. che creano variabili css come: --geist-src ecc.. Next.js genera automaticamente 
+    nel <head> del documento un blocco di CSS dove definisce le variabili che hai scelto 
+    (--geist-src, ecc.) assegnando loro il file del font scaricato o ottimizzato.
+
+    Quando scriviamo <body className="${geist.variable}">, stiamo semplicemente dicendo al browser: 
+    "In tutto il body, queste variabili CSS sono disponibili". 
+
+    Quando durante la compilazione Next incontra: import './globals.css', Next.js capisce che quel 
+    CSS deve essere caricato globalmente. Quando il compilatore di Next.js "legge" globals.css, 
+    trova queste tre righe magiche in cima:
+
+    @import 'tailwindcss';
+    @import 'tw-animate-css';
+    @import 'shadcn/tailwind.css';
+
+    Queste non sono istruzioni CSS standard; il browser non saprebbe cosa farsene. È qui che interviene 
+    PostCSS (configurato tramite il file postcss.config.js).
+
+    Next.js "sforna" e invia al browser non è più il file con le direttive @tailwind, ma un file CSS standard 
+    che contiene come: Il reset dei margini/font e le utility class che hai usato nei tuoi componenti.
+
+    @FASE2 
+    In Tailwind CSS 4, la magia avviene tramite il prefisso del nome della variabile all'interno 
+    del blocco @theme
+
+    Colori (--color-*)
+    È la convenzione più potente. Genera utility per qualsiasi proprietà che accetti un colore.
+    Convenzione: --color-[nome]: [valore];
+    Utility generate: 
+    
+    1.  bg-[nome] (background-color)
+    2.  text-[nome] (color)
+    3.  border-[nome] (border-color)
+    4.  outline-[nome] (outline-color)
+    5.  underline-[nome] (text-decoration-color)
+    6.  ring-[nome] (box-shadow/ring)
+    7.  accent-[nome] (accent-color)
+    8.  caret-[nome] (caret-color)
+    9.  fill-[nome] / stroke-[nome] (per SVG)
+    10. Opacità: Supporta automaticamente bg-[nome]/50.
+
+    Immagini e gradienti ( --background-image-* ) 
+    --background-image-adhr-gradient Tailwind ragiona così: 
+    
+    1. --background-image- => bg- il namespace
+    2. adhr-gradient: Questo è il nome dell'utility. 
+    3. bg-adhr-gradient 
+
+
+
+*/
+
 
 :root {
+
+    /* I valori reali delle variabili che i componenti Shadcn cercano */
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
+    
+    --popover: oklch(1 0 0); 
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
+    
+    /* Questo ripristina le linee orizzontali (Zinc 200) */
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
+    
+    /* Ombra header */ 
+    --adhr-shadow-color: var(--color-zinc-900); 
+    
+    /* Colori ADHR */
+    --adhr-red: oklch(0.45 0.18 25); 
+    --adhr-dark:  oklch(0.45 0.18 25);
+    --adhr-light: oklch(0.58 0.23 25);
+
+    --adhr-zinc-ulight: var(--color-zinc-200);
+    --adhr-zinc-light: var(--color-zinc-400);
+    --adhr-zinc-medium: var(--color-zinc-600);
+     --adhr-zinc-strong: var(--color-zinc-800);
+
+    --adhr-gradient: linear-gradient(
+        to right,
+        var(--adhr-dark),
+        var(--adhr-light)
+    );
+
+    /* shadcn */ 
+    --primary: var(--adhr-red);
+    --sidebar: oklch(1 0 0 / 75%);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -87,61 +104,96 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
-    /* Cambiamo il Primary col Rosso ADHR */
-    --primary: oklch(0.45 0.18 25);
-    --primary-foreground: oklch(0.985 0 0); /* Testo bianco su sfondo rosso */
 
-    /* Cambiamo il colore della Sidebar attiva */
-    --sidebar-primary: oklch(0.45 0.18 25);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-
-    /* Definiamo i tuoi colori brand come variabili extra per i gradienti */
-    --brand-adhr-dark: oklch(0.45 0.18 25);
-    --brand-adhr-light: oklch(0.58 0.23 25);
 }
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+@theme inline {
+
+    --color-adhr-dark: var(--adhr-dark);
+    --color-adhr-light: var(--adhr-light);
+    --color-adhr-zinc-light: var(--adhr-zinc-light);
+    --color-adhr-zinc-ulight: var(--adhr-zinc-ulight);
+
+    --color-adhr-zinc-medium: var(--adhr-zinc-medium);
+    --color-adhr-zinc-strong: var(--adhr-zinc-strong);
+    --background-image-adhr-gradient: var(--adhr-gradient);
+    --color-adhr-zinc-shadow: var(--adhr-shadow-color);
+
+    /* Font */
+    --font-sans: var(--geist-src); 
+    --font-mono: var(--geist-mono-src);
+    --font-geist: var(--geist-src);
+    --font-geist-mono: var(--geist-mono-src);
+    --font-special: var(--special-src);
+    
+    /* Colori ADHR */ 
+    --color-primary: var(--adhr-red);
+    --color-background-soft: #F8F8F6; 
+
+
+
+    /* Mappatura Colori UI per Shadcn (Tailwind v4 bridge) */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    /* Mappatura esplicita per la Sidebar di shadcn */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+
+    
+    
+    /* Raggi bordi */
+    --radius-md: 0.5rem;
+    --radius-lg: var(--radius);
+
+    /* Badge Tags */
+    --color-coming-soon-light: oklch(0.96 0.03 25);
+    --color-coming-soon-text: oklch(0.55 0.1 25);
+    --color-success-badge-light: oklch(0.97 0.05 160);
+    --color-success-badge-text: oklch(0.60 0.15 160);
 }
+
+
 
 @layer base {
+    /* 1. Applichiamo il font Geist ovunque e forziamo il bordo default */
+    :root, 
+    body, 
+    [data-radix-portal],
     * {
-        @apply border-border outline-ring/50;
+        font-family: var(--geist-src), ui-sans-serif, system-ui, sans-serif !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Questa riga ripristina i bordi e i separatori Zinc ovunque */
+        @apply border-border;
     }
+
     body {
-        @apply bg-background text-foreground;
+        background-color: var(--color-background-soft);
+        color: var(--foreground);
+        margin: 0;
     }
-    html {
-        @apply font-sans;
+
+    /* 2. Reset ereditarietà per elementi form e titoli */
+    h1, h2, h3, h4, h5, h6, 
+    button, input, optgroup, 
+    select, textarea, 
+    kbd, code, samp {
+        font-family: inherit;
+    }
+
+    .font-sans {
+        font-family: var(--geist-src), sans-serif;
     }
 }

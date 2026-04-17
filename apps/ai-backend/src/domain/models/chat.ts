@@ -14,8 +14,11 @@
  * usare un messaggio di sistema per impostare il tono della conversazione,
  * i limiti e l'obiettivo del modello.
  *
- * Esempio: "Sei un assistente amichevole e informativo che aiuta gli utenti a risolvere i loro problemi. Fornisci risposte concise e chiare."
- * Esempio: "Sei un esperto programmatore Python. Rispondi in modo conciso e usa solo un tono professionale. Non rispondere a domande che non riguardano la programmazione
+ * Esempio:     "Sei un assistente amichevole e informativo che aiuta gli utenti a risolvere i loro problemi. 
+ *              Fornisci risposte concise e chiare."
+ * 
+ * Esempio:     "Sei un esperto programmatore Python. Rispondi in modo conciso e usa solo un tono professionale. 
+ *              Non rispondere a domande che non riguardano la programmazione
  *
  * Livello di autorità: Massimo. Il modello è addestrato per dare la priorità assoluta alle istruzioni di sistema rispetto a tutto il resto.
  *
@@ -57,8 +60,10 @@ export type Message = z.infer<typeof MessageSchema>
 
 // Definiamo la richiesta che arriverà dal frontend
 export const ChatRequestSchema = z.object({
-    message: z.string().min(1),
-    history: z.array(MessageSchema).optional(),
+    messages: z.array(MessageSchema) // Il client manda l'intero array aggiornato
 })
 
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
+
+
+

@@ -1,10 +1,10 @@
 /**
- * ChatController: Gestisce le richieste HTTP per la chat, interfacciandosi con il ChatUseCase e l'adapter AI.
+ * ChatController: Gestisce le richieste HTTP per la chat, 
+ * interfacciandosi con il ChatUseCase e l'adapter AI.
  */
-
+import { FastifyRequest, FastifyReply } from 'fastify'
 import { ChatUseCase } from '@/application/use-cases/chat.use-case'
 import { ChatRequest } from '@/domain/models/chat'
-import { FastifyRequest, FastifyReply } from 'fastify'
 import { initSSE, sendSSE } from '@/interfaces/http/helpers/sse.helpers'
 
 export class ChatController {
@@ -15,7 +15,7 @@ export class ChatController {
         reply: FastifyReply
     ) {
         let isClosed = false
-        const { message, history } = request.body
+        const { messages } = request.body
         initSSE(reply)
 
         // Gestione chiusura connessione
@@ -25,7 +25,10 @@ export class ChatController {
         })
 
         try {
-            const stream = await this.chatUseCase.execute(message, history || [])
+            const lastUserMessage = messages[messages.length - 1].content;
+            const conversationHistory = messages.slice(0, -1);
+
+            const stream = await this.chatUseCase.execute(lastUserMessage, conversationHistory || [])
 
             for await (const chunk of stream) {
                 if (isClosed) break

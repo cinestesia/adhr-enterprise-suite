@@ -7,8 +7,9 @@ import { healthRoutes } from '@/interfaces/http/routes/health-routes'
 
 /**
  * @note
- * Di default, Pino scrive i log in un formato JSON compresso e bruttissimo da leggere per un essere umano,
- * ma perfetto per i computer (e per i raccoglitori di log di Azure Kubernetes).
+ * Di default, Pino scrive i log in un formato JSON compresso 
+ * e bruttissimo da leggere per un essere umano, ma perfetto 
+ * per i computer (e per hub di log tipo Azure Kubernetes).
  *
  */
 const app = fastify({
@@ -27,7 +28,7 @@ const schema = {
         PORT: { type: 'string', default: '3002' },
         HOST: { type: 'string', default: '0.0.0.0' },
         AI_BASE_URL: { type: 'string' },
-        AI_MODEL_NAME: { type: 'string', default: 'gpt-4' },
+        AI_MODEL_NAME: { type: 'string', default: 'qwen2.5-1.5b-instruct.gguf' },
         CORS_ORIGIN: { type: 'string', default: '*' },
     },
 }
@@ -36,7 +37,7 @@ const options = {
     schema: schema,
 
     dotenv: {
-        // true,  => Dice al plugin di leggere comunque il file .env se esiste (utile in locale)
+        // true,  
         path: `.env.${process.env.NODE_ENV || 'development'}`,
     },
 }
@@ -46,20 +47,18 @@ const start = async () => {
         await app.register(fastifyEnv, options)
 
         await app.register(cors, {
-            origin: app.config.CORS_ORIGIN, // Usiamo la variabile tipizzata!
+            origin: app.config.CORS_ORIGIN,
             methods: ['GET', 'POST'],
         })
 
-        await app.register(diPlugin)
-        await app.register(healthRoutes) // Non serve prefissare, è solo /health
+        await app.register(diPlugin) // registra il plugin che crea e inietta il controller, use case, adapter)
+        await app.register(healthRoutes) // Omesso il porefix perchè, è solo /health
         await app.register(chatRoutes, { prefix: '/api/v1' })
-
-        // Accediamo alle variabili tramite app.config (popolato dal plugin)
+        
         const port = Number(app.config.PORT)
         const host = app.config.HOST
-
+        
         await app.listen({ port, host })
-
         app.log.info(`🚀 AI Service in ascolto su http://${host}:${port}`)
     } catch (err) {
         app.log.error(err)
