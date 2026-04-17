@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown'
 export function ChatList({ messages, isLoading, isTyping }: { messages: Message[], isLoading:boolean, isTyping: boolean }) {
     const scrollEndRef = useRef<HTMLDivElement>(null)
 
-    // Scroll to the bottom whenever the messages array updates
+    // Scroll sotto quando arriva un nuovo messaggio!
     useEffect(() => {
         scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
