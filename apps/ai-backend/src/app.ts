@@ -9,7 +9,7 @@ import { ingestRoutes } from './presentation/http/routes/ingest.routes'
 
 /**
  * @note
- * Di default, Pino scrive i log in un formato JSON compresso
+ * Di default, Pino scrive i log in un formato JSON compresso 
  * e bruttissimo da leggere per un essere umano, ma perfetto
  * per i computer (e per hub di log tipo Azure Kubernetes).  
  *

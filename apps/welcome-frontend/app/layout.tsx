@@ -39,7 +39,7 @@ const geist = Geist({
 
 const geistMono = Geist_Mono({
   variable: '--geist-mono-src',
-  subsets: ['latin'],
+  subsets: ['latin'], 
 })
 
 export default function RootLayoutPage({
