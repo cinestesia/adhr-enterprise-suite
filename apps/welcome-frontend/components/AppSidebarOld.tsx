@@ -93,7 +93,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent className="bg-white">
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 px-4 mb-4">
@@ -103,8 +103,8 @@ export function AppSidebar() {
             <SidebarMenu className="gap-1">
               {items.map((item) => {
                 // LOGICA DI ATTIVAZIONE AVANZATA
-                const isActive = 
-                  pathname === item.url || 
+                const isActive =
+                  pathname === item.url ||
                   (item.url !== '/' && pathname.startsWith(item.url))
 
                 return (

@@ -1,11 +1,11 @@
 /**
- * ChatController: Gestisce le richieste HTTP per la chat, 
+ * ChatController: Gestisce le richieste HTTP per la chat,
  * interfacciandosi con il ChatUseCase e l'adapter AI.
  */
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { ChatUseCase } from '@/application/use-cases/chat.use-case'
 import { ChatRequest } from '@/domain/models/chat'
-import { initSSE, sendSSE } from '@/interfaces/http/helpers/sse.helpers'
+import { initSSE, sendSSE } from '@/presentation/http/helpers/sse.helpers'
 
 export class ChatController {
     constructor(private chatUseCase: ChatUseCase) {}
@@ -25,10 +25,13 @@ export class ChatController {
         })
 
         try {
-            const lastUserMessage = messages[messages.length - 1].content;
-            const conversationHistory = messages.slice(0, -1);
+            const lastUserMessage = messages[messages.length - 1].content
+            const conversationHistory = messages.slice(0, -1)
 
-            const stream = await this.chatUseCase.execute(lastUserMessage, conversationHistory || [])
+            const stream = await this.chatUseCase.execute(
+                lastUserMessage,
+                conversationHistory || []
+            )
 
             for await (const chunk of stream) {
                 if (isClosed) break
@@ -40,6 +43,7 @@ export class ChatController {
             }
         } catch (error: unknown) {
             request.log.error(error)
+
             const message =
                 error instanceof Error ? error.message : 'Errore durante lo streaming'
 

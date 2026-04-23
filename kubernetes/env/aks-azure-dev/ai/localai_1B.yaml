@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localai
+  namespace: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: localai
+  template:
+    metadata:
+      labels:
+        app: localai
+    spec:
+      initContainers:
+        - name: download-model
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /models/embedding-model
+
+              # 2. Scarica il modello
+              if [ ! -f /models/embedding-model/model.gguf ]; then
+                wget -L -O /models/embedding-model/model.gguf https://huggingface.co/abetlen/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5.Q4_K_M.gguf
+              fi
+
+              cat <<EOF > /models/adhr-embedding-model.yaml
+              name: adhr_embedding_model
+              backend: llama
+              embeddings: true
+              parameters:
+                model: /models/embedding-model/model.gguf
+              EOF
+              echo "Configurazione scritta correttamente:"
+              cat /models/adhr-embedding-model.yaml
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      containers:
+        - name: localai 
+          image: localai/localai:latest-cpu
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          env:
+            - name: MODELS_PATH
+              value: "/models"
+            - name: THREADS
+              value: "1" 
+            - name: CONTEXT_SIZE
+              value: "2048"
+            - name: GALLERIES
+              value: '[{"name":"localai", "url":"https://raw.githubusercontent.com/go-skynet/model-gallery/main/index.yaml"}]'
+            - name: WATCHDOG_IDLE_TIMEOUT
+              value: "5m"  # Dagli 5 minuti per caricare
+            - name: WATCHDOG_BUSY_TIMEOUT
+              value: "5m"
+            - name: LLAMACPP_GRPC_TIMEOUT
+              value: "5m" # Aggiungi questa!              
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: localai-models-pvc

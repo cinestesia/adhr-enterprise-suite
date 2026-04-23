@@ -44,10 +44,10 @@ export default function AIAgentAndChatbot() {
       })
 
       if (!response.body) return
-      
+
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      
+
       // Prepariamo il messaggio vuoto dell'AI
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
@@ -57,18 +57,18 @@ export default function AIAgentAndChatbot() {
       while (true) {
         const { value, done } = await reader.read()
         if (done) break
-        
+
         const chunk = decoder.decode(value)
         const lines = chunk.split('\n')
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const jsonStr = line.replace('data: ', '').trim()
             if (jsonStr === '[DONE]') continue
-            
+
             try {
               const data = JSON.parse(jsonStr)
-              
+
               let token = ''
               // Estraiamo il testo a seconda di come risponde il tuo backend
               if (data.text) {
@@ -85,11 +85,11 @@ export default function AIAgentAndChatbot() {
                 setMessages((prev) => {
                   const updated = [...prev]
                   const lastIndex = updated.length - 1
-                  
+
                   // 3. Rimpiazziamo l'intero contenuto dell'ultimo messaggio!
                   // Invece di fare += (che sdoppiava le parole), sovrascriviamo con la stringa completa
                   updated[lastIndex].content = fullResponseText
-                  
+
                   return updated
                 })
               }

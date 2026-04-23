@@ -23,8 +23,7 @@
     5. Risultato: Lo sfondo diventa grigio scuro.
 
 */
-@custom-variant dark (&:is(.dark *)); 
-
+@custom-variant dark (&:is(.dark *));
 
 /*
     In Tailwind v4, il prefisso che metti alla variabile dentro @theme decide che tipo di classe 

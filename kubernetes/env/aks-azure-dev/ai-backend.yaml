@@ -11,7 +11,7 @@ ingress:
     host: 'ai-api.4.232.3.98.nip.io'
     # Rimosse tutte le annotazioni inutili!
     externalTrafficPolicy: Local # Mantiene l'IP del client originale, utile per i log e la sicurezza.
-    whitelistSourceRange: "77.89.12.48/29, 10.244.0.1/32" # Solo questo range IP può accedere all'ingress. Cambia con il tuo IP o range di IP.
+    whitelistSourceRange: '77.89.12.48/29, 10.244.0.1/32' # Solo questo range IP può accedere all'ingress. Cambia con il tuo IP o range di IP.
 config:
     databaseUrl: '...'
 

@@ -59,7 +59,8 @@ jobs:
                     --set env.ENVIRONMENT="development" \
                     --set env.PORT="3002" \
                     --set env.HOSTNAME="0.0.0.0" \
-                    --set env.AI_MODEL_NAME="qwen2.5-1.5b-instruct.gguf" \
-                    --set env.AI_BASE_URL="http://localai-service.development.svc.cluster.local:80/v1" \
-                    --set secretEnv.OPENAI_API_KEY="not_used_by_local_ai" \
+                    --set env.AI_MODEL_NAME="llama3.1" \
+                    --set env.AI_EMBEDDING_MODEL_NAME="nomic-embed-text" \
+                    --set env.AI_BASE_URL="http://ai-service.development.svc.cluster.local/v1" \
+                    --set secretEnv.OPENAI_API_KEY="not_used_by_ollama" \
                     --set secretEnv.DATABASE_URL="${{ secrets.BACKEND_DATABASE_URL }}"

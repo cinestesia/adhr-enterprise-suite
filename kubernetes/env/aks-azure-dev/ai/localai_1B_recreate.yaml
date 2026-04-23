@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localai
+  namespace: development
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: localai
+  template:
+    metadata:
+      labels:
+        app: localai
+    spec:
+      initContainers:
+        - name: download-model
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              # Pulizia file residui corrotti dai tentativi precedenti
+              #rm -f /models/*.yaml
+              
+              mkdir -p /models/embedding-model
+
+              if [ ! -f /models/embedding-model/model.gguf ]; then
+                echo "Scaricamento modello..."
+                wget -L -O /models/embedding-model/model.gguf https://huggingface.co/abetlen/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5.Q4_K_M.gguf
+              fi
+
+              # Creazione file senza spazi iniziali fastidiosi
+              # Usiamo printf per sicurezza totale sull'indentazione
+              printf "name: adhr-embedding-model\nbackend: llama-cpp\nembeddings: true\nparameters:\n  model: embedding-model/model.gguf\n" > /models/adhr-embedding-model.yaml
+              
+              echo "Configurazione scritta:"
+              cat /models/adhr-embedding-model.yaml
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      containers:
+        - name: localai 
+          image: localai/localai:latest-cpu
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          env:
+            - name: MODELS_PATH
+              value: "/models"
+            - name: THREADS
+              value: "1" 
+            - name: CONTEXT_SIZE
+              value: "2048"
+            - name: WATCHDOG_IDLE_TIMEOUT
+              value: "5m"
+            - name: WATCHDOG_BUSY_TIMEOUT
+              value: "5m"
+            - name: LLAMACPP_GRPC_TIMEOUT
+              value: "5m"
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: localai-models-pvc

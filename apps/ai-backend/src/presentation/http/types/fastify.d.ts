@@ -1,5 +1,6 @@
 import 'fastify'
 import { ChatController } from '@/interfaces/http/controllers/chat.controller'
+import { IngestController } from '@/interfaces/http/controllers/ingest.controller'
 
 declare module 'fastify' {
     interface FastifyInstance {
@@ -13,6 +14,7 @@ declare module 'fastify' {
     }
 
     interface FastifyInstance {
-        chatController: ChatController
+        chatController: ChatController,
+        ingestController: IngestController
     }
 }

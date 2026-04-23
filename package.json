@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "lint": "turbo lint",
-        "format": "prettier --write .",
+        "format": "prettier --write \"**/*.{ts,tsx,json,md}\" --ignore-path .prettierignore",
         "format:check": "prettier --check .",
         "prepare": "husky",
         "build": "turbo build",

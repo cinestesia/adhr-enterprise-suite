@@ -1,4 +1,4 @@
-import { IAIGateway } from '@/domain/ports/ai-gateway.interface'
+import { IChatPort } from '@/domain/ports/chat.port'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
 
 /**
@@ -13,7 +13,7 @@ import { IterableReadableStream } from '@langchain/core/utils/stream'
  */
 
 export class ChatUseCase {
-    constructor(private aiGateway: IAIGateway) {}
+    constructor(private aiGateway: IChatPort) {}
 
     async execute(
         message: string,

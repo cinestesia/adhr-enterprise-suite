@@ -29,13 +29,13 @@ services:
         environment:
             NODE_ENV: ${NODE_ENV}
             ENVIRONMENT: ${ENVIRONMENT}
-            AUTH_KEYCLOAK_ID: ${AUTH_KEYCLOACK_ID}
-            AUTH_KEYCLOAK_SECRET: ${AUTH_KEYCLOACK_SECRET}
-            AUTH_KEYCLOAK_ISSUER: ${AUTH_KEYCLOACK_ISSUER}
-            WELCOME_AUTH_SECRET: ${WELCOME_AUTH_SECRET}
-            WELCOME_AUTH_URL: ${WELCOME_AUTH_URL}
+            AUTH_KEYCLOAK_ID: ${AUTH_KEYCLOAK_ID}
+            AUTH_KEYCLOAK_SECRET: ${AUTH_KEYCLOAK_SECRET}
+            AUTH_KEYCLOAK_ISSUER: ${AUTH_KEYCLOAK_ISSUER}
+            AUTH_SECRET: ${AUTH_SECRET}
+            AUTH_URL: ${AUTH_URL}
+            AI_BACKEND_URL: "http://ai-backend:3002"
 
-            
         restart: unless-stopped
 
     welcome-backend:
@@ -58,7 +58,6 @@ services:
 
         restart: unless-stopped
 
-
     ai-backend:
         build:
             context: .
@@ -72,15 +71,23 @@ services:
             - '3002:3002'
 
         environment:
-            HOST: "0.0.0.0"
+            # Sovrascriviamo l'URL per farlo parlare con il port-forward sul MIO PC
+            # http://host.docker.internal:11434/v1 => 172.18.0.1 dove c'è il MIO PC
+            # per questo motivo se metto: 
+            # kubectl port-forward --address 0.0.0.0 svc/ai-service 11434:80 -n development
+            # dico al forwarder di mettersi in ascolto su tutte le interfacce di rete alla porta 
+            # 11434 e spedirle a svx/ai-service porta 80.
+
+            HOST: '0.0.0.0'
+            AI_BASE_URL: "http://host.docker.internal:11434/v1"
+            AI_MODEL_NAME: ${AI_MODEL_NAME}            
+            AI_EMBEDDING_MODEL_NAME: ${AI_EMBEDDING_MODEL_NAME}
             PORT: "3002"
-            NODE_ENV: ${NODE_ENV}
-            # Sovrascriviamo l'URL per farlo parlare con il port-forward sul tuo PC
-            AI_BASE_URL: "http://host.docker.internal:8080/v1"
-            # Queste vengono lette direttamente dal tuo .env.development
-            AI_MODEL_NAME: ${AI_MODEL_NAME}
             OPENAI_API_KEY: ${OPENAI_API_KEY}
+            NODE_ENV: ${NODE_ENV}
+            
+            
         extra_hosts:
-            - "host.docker.internal:host-gateway"
-        
+            - 'host.docker.internal:host-gateway'
+
         restart: unless-stopped

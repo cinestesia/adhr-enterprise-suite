@@ -2,7 +2,6 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-
 /*  
     @FASE1 
 
@@ -59,42 +58,36 @@
 
 */
 
-
 :root {
-
     /* I valori reali delle variabili che i componenti Shadcn cercano */
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
-    
-    --popover: oklch(1 0 0); 
+
+    --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    
+
     /* Questo ripristina le linee orizzontali (Zinc 200) */
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
     --radius: 0.625rem;
-    
-    /* Ombra header */ 
-    --adhr-shadow-color: var(--color-zinc-900); 
-    
+
+    /* Ombra header */
+    --adhr-shadow-color: var(--color-zinc-900);
+
     /* Colori ADHR */
-    --adhr-red: oklch(0.45 0.18 25); 
-    --adhr-dark:  oklch(0.45 0.18 25);
+    --adhr-red: oklch(0.45 0.18 25);
+    --adhr-dark: oklch(0.45 0.18 25);
     --adhr-light: oklch(0.58 0.23 25);
 
     --adhr-zinc-ulight: var(--color-zinc-200);
     --adhr-zinc-light: var(--color-zinc-400);
     --adhr-zinc-medium: var(--color-zinc-600);
-     --adhr-zinc-strong: var(--color-zinc-800);
+    --adhr-zinc-strong: var(--color-zinc-800);
 
-    --adhr-gradient: linear-gradient(
-        to right,
-        var(--adhr-dark),
-        var(--adhr-light)
-    );
+    --adhr-gradient: linear-gradient(to right, var(--adhr-dark), var(--adhr-light));
 
-    /* shadcn */ 
+    /* shadcn */
     --primary: var(--adhr-red);
     --sidebar: oklch(1 0 0 / 75%);
     --sidebar-foreground: oklch(0.145 0 0);
@@ -105,10 +98,20 @@
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
 
+    /* Destructive (Errore): Più luminoso (0.57) e più saturo (0.22) */
+    --destructive: oklch(0.57 0.22 25);
+    --destructive-foreground: oklch(
+        0.98 0 0
+    ); /* Quasi bianco per il testo sopra il rosso */
+
+    /* Warning: Un ambra caldo (Hue 80 circa) */
+    --warning: oklch(0.75 0.15 80);
+    --warning-foreground: oklch(
+        0.25 0.05 80
+    ); /* Testo scuro per leggibilità su sfondo chiaro */
 }
 
 @theme inline {
-
     --color-adhr-dark: var(--adhr-dark);
     --color-adhr-light: var(--adhr-light);
     --color-adhr-zinc-light: var(--adhr-zinc-light);
@@ -120,17 +123,15 @@
     --color-adhr-zinc-shadow: var(--adhr-shadow-color);
 
     /* Font */
-    --font-sans: var(--geist-src); 
+    --font-sans: var(--geist-src);
     --font-mono: var(--geist-mono-src);
     --font-geist: var(--geist-src);
     --font-geist-mono: var(--geist-mono-src);
     --font-special: var(--special-src);
-    
-    /* Colori ADHR */ 
+
+    /* Colori ADHR */
     --color-primary: var(--adhr-red);
-    --color-background-soft: #F8F8F6; 
-
-
+    --color-background-soft: #f8f8f6;
 
     /* Mappatura Colori UI per Shadcn (Tailwind v4 bridge) */
     --color-background: var(--background);
@@ -149,10 +150,12 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    /* Mappatura Destructive & warning per Shadcn */
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
 
-
-    
-    
     /* Raggi bordi */
     --radius-md: 0.5rem;
     --radius-lg: var(--radius);
@@ -161,15 +164,13 @@
     --color-coming-soon-light: oklch(0.96 0.03 25);
     --color-coming-soon-text: oklch(0.55 0.1 25);
     --color-success-badge-light: oklch(0.97 0.05 160);
-    --color-success-badge-text: oklch(0.60 0.15 160);
+    --color-success-badge-text: oklch(0.6 0.15 160);
 }
-
-
 
 @layer base {
     /* 1. Applichiamo il font Geist ovunque e forziamo il bordo default */
-    :root, 
-    body, 
+    :root,
+    body,
     [data-radix-portal],
     * {
         font-family: var(--geist-src), ui-sans-serif, system-ui, sans-serif !important;
@@ -186,10 +187,20 @@
     }
 
     /* 2. Reset ereditarietà per elementi form e titoli */
-    h1, h2, h3, h4, h5, h6, 
-    button, input, optgroup, 
-    select, textarea, 
-    kbd, code, samp {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    button,
+    input,
+    optgroup,
+    select,
+    textarea,
+    kbd,
+    code,
+    samp {
         font-family: inherit;
     }
 

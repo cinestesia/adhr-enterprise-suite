@@ -1,15 +1,17 @@
 import fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifyEnv from '@fastify/env'
-import { diPlugin } from './plugins/di.plugin'
-import { chatRoutes } from '@/interfaces/http/routes/chat.routes'
-import { healthRoutes } from '@/interfaces/http/routes/health-routes'
+import { diPlugin } from '@/presentation/http/plugins/di.plugin'
+import { chatRoutes } from '@/presentation/http/routes/chat.routes'
+import { healthRoutes } from '@/presentation/http/routes/health-routes'
+import multipart from '@fastify/multipart'
+import { ingestRoutes } from './presentation/http/routes/ingest.routes'
 
 /**
  * @note
- * Di default, Pino scrive i log in un formato JSON compresso 
- * e bruttissimo da leggere per un essere umano, ma perfetto 
- * per i computer (e per hub di log tipo Azure Kubernetes).
+ * Di default, Pino scrive i log in un formato JSON compresso
+ * e bruttissimo da leggere per un essere umano, ma perfetto
+ * per i computer (e per hub di log tipo Azure Kubernetes).  
  *
  */
 const app = fastify({
@@ -22,22 +24,24 @@ const app = fastify({
 })
 
 // Definiamo adesso lo schema delle variabili ambientali che l'app DEVE avere per funzionare
-const schema = {
+const envSchema = {
     type: 'object',
     properties: {
         PORT: { type: 'string', default: '3002' },
         HOST: { type: 'string', default: '0.0.0.0' },
         AI_BASE_URL: { type: 'string' },
         AI_MODEL_NAME: { type: 'string', default: 'qwen2.5-1.5b-instruct.gguf' },
+        OPENAI_API_KEY: { type: 'string', default: 'not-used' },
         CORS_ORIGIN: { type: 'string', default: '*' },
+
     },
 }
 
 const options = {
-    schema: schema,
+    schema: envSchema,
 
     dotenv: {
-        // true,  
+        // true,
         path: `.env.${process.env.NODE_ENV || 'development'}`,
     },
 }
@@ -46,20 +50,53 @@ const start = async () => {
     try {
         await app.register(fastifyEnv, options)
 
+        /**
+         * @note
+         * Registriamo multipart per gestire i file caricati
+         * Questo è un middleware parser agganciato al ciclo di vita della richiesta.
+         * Di default Fastify sa bene gestire @application/json o text/plain 
+         * ma se inviamo un form come multipart/form-data astify non saprebbe come leggerlo
+         * Registrando questo plugin, istruisci l'app a riconoscere quel Content-Type 
+         * specifico.
+        */
+        await app.register(multipart, {
+            limits: {
+                fileSize: 10 * 1024 * 1024, // Limite 10MB
+            },
+            attachFieldsToBody: false, // Gestiremo il file manualmente nel controller
+        })
+
+        /**
+         * @note
+         * Qui stiamo aggiungndo un hook, un intercettore nella fase di onRequest 
+         * che implementa le regole CORS. 
+         * 
+         * Quando un browser (es. Chrome o Firefox) cerca di fare una chiamata POST 
+         * al servizio da un dominio diverso (es. il frontend su localhost:3000 verso 
+         * il backend su localhost:3002), il browser non invia subito i dati.
+         * 
+         * Prima invia una richiesta di prova chiamata OPTIONS.
+         * Senza questo plugin: Fastify risponderebbe con un errore o non saprebbe cosa fare.
+         * Con il plugin: Il server risponde automaticamente: 
+         * "Ehi browser, sono pronto! Accetto chiamate da questo dominio (ORIGIN) e 
+         * con questi metodi".
+         */
         await app.register(cors, {
             origin: app.config.CORS_ORIGIN,
             methods: ['GET', 'POST'],
         })
-
-        await app.register(diPlugin) // registra il plugin che crea e inietta il controller, use case, adapter)
+        
+        // registra il plugin che crea e inietta il controller, use case, adapter)
+        await app.register(diPlugin) 
         await app.register(healthRoutes) // Omesso il porefix perchè, è solo /health
         await app.register(chatRoutes, { prefix: '/api/v1' })
+        await app.register(ingestRoutes, { prefix: '/api/v1'})
         
         const port = Number(app.config.PORT)
         const host = app.config.HOST
-        
+
         await app.listen({ port, host })
-        app.log.info(`🚀 AI Service in ascolto su http://${host}:${port}`)
+        app.log.info(`🚀 ai-backend in ascolto su http://${host}:${port}`)
     } catch (err) {
         app.log.error(err)
         process.exit(1)
@@ -67,31 +104,3 @@ const start = async () => {
 }
 
 start()
-
-/**
- * @note
- * Vede che dotenv: true è attivo.
- *
- * qui sopra fastify:
- *
- * 1.   Cerca un file chiamato .env nella cartella in cui stai eseguendo l'app.
- * 2.   Se lo trova, prende quelle variabili e le carica temporaneamente in process.env.
- * 3.   Subito dopo, le prende, le valida contro il tuo schema JSON (quello con type: 'object'),
- *      applica i valori di default se qualcosa manca, e infine le sposta dentro l'oggetto app.config.
- *
- * Se il file non esiste, non succede nulla di grave. Il plugin semplicemente non caricherà nulla da file,
- * ma andrà a leggere direttamente le variabili d'ambiente reali del sistema operativo
- * (quelle iniettate da Docker o da Kubernetes).
- *
- * Ecco il comportamento preciso del plugin:
- * Cerca il file .env. Non lo trova? Ok, pazienza, va avanti.
- * Guarda le variabili d'ambiente che Kubernetes ha iniettato nel container (accessibili tramite process.env).
- * Applica lo schema di validazione su quelle variabili.
- * Se le variabili ci sono e sono corrette: L'app parte e le trovi in app.config.
- * Se manca una variabile obbligatoria (es. AI_BASE_URL): L'app va in crash immediatamente all'avvio con un errore chiaro, impedendo di deployare un container rotto.
- * In pratica: il file .env lo usiamo solo come "comodità" per non dover digitare le variabili a mano sul PC.
- * Su Kubernetes non metteremo nessun file .env: passeremo le variabili direttamente nello YAML del cluster
- * e @fastify/env le leggerà da lì!
- *
- *
- */
