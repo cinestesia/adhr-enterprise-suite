@@ -8,7 +8,7 @@ import { IterableReadableStream } from '@langchain/core/utils/stream'
  * prima di mandarla all'AI.
  *
  * Se vorremo salvare la cronologia dei messaggi nel database, lo faremo qui dentro.
- *
+ * 
  *
  */
 
