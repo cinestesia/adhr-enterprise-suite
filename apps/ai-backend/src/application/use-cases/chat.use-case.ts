@@ -7,7 +7,7 @@ import { IterableReadableStream } from '@langchain/core/utils/stream'
  * la domanda dell'utente, andare a cercare i CV nel database vettoriale e unire i CV alla domanda
  * prima di mandarla all'AI.
  *
- * Se vorremo salvare la cronologia dei messaggi nel database, lo faremo qui dentro.
+ * Se vorremo salvare la cronologia dei messaggi nel database, lo faremo qui dentro...
  * 
  *
  */
