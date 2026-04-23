@@ -5,9 +5,9 @@
  */
 
 import { Geist, Geist_Mono, Special_Elite } from 'next/font/google'
-import './globals.css' // Importiamo i nostri stili globali, che includono anche le variabili css dei font
 import SessionWrapper from '@/components/SessionWrapper'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import './globals.css'
 
 /**
  * Caratteri tipoografici (font) interessanti per l'app. Creiamo il carattere e lo esportiamo
@@ -39,7 +39,7 @@ const geist = Geist({
 
 const geistMono = Geist_Mono({
   variable: '--geist-mono-src',
-  subsets: ['latin'], 
+  subsets: ['latin'],
 })
 
 export default function RootLayoutPage({

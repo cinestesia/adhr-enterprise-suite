@@ -4,8 +4,6 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
         const backendUrl = process.env.AI_BACKEND_URL || 'http://localhost:3002'
-        console.log("XXXXXXXXXXXXXXXXXXXXX BACKEDN URL:", backendUrl)
-
         const response = await fetch(`${backendUrl}/api/v1/chat`, {
             method: 'POST',
             headers: {
@@ -14,7 +12,6 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify(body),
         })
 
-        console.log("SOOOOOONOOOOOOOOOOO QUIIIIIIIIII")
         if (!response.ok) {
             const errorText = await response.text()
             return new Response(`Errore backend: ${errorText}`, {
