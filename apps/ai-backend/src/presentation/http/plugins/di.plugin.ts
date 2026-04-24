@@ -6,11 +6,12 @@ import { ChatController } from '@/presentation/http/controllers/chat.controller'
 import { IngestController } from '@/presentation/http/controllers/ingest.controller'
 import { IngestFileUseCase } from '@/application/use-cases/ingest-file.use-case'
 import { LocalStorageAdapter } from '@/infrastructure/storage/local-storage.adapter'
+import { OllamaAdapter } from '@/infrastructure/ai/ollama-adapter'
 
 export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     
     // Chat controller
-    const aiAdapter = new LocalAIAdapter()
+    const aiAdapter = new OllamaAdapter()
     const chatUseCase = new ChatUseCase(aiAdapter)
     const chatController = new ChatController(chatUseCase)
 
