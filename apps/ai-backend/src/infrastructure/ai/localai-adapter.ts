@@ -42,7 +42,7 @@ export class LocalAIAdapter implements IChatPort, IEmbeddingsPort {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:8080/v1',
             },
 
-            model: process.env.AI_MODEL_NAME || 'gpt-4',
+            model: process.env.AI_MODEL_NAME || 'gpt-4', 
         
             temperature: 0.7,
         })
