@@ -32,7 +32,7 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
     private model: ChatOpenAI
     private embeddings: OpenAIEmbeddings
 
-    constructor() {
+    constructor() { 
         
         this.model = new ChatOpenAI({
             
