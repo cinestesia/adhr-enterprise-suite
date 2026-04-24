@@ -12,7 +12,6 @@ export class IngestFileUseCase {
 
     constructor(
         private storage: IFileStoragePort,
-        private embeddings: IEmbeddingsPort,
         private vectorDb?: IVectorDbPort
     ) {}
 
@@ -134,8 +133,7 @@ export class IngestFileUseCase {
 
 
         try {
-            const vectors = await this.embeddings.embedDocuments(chunks.map(chunk => chunk.pageContent));
-            console.log('xxxxxxxxxxxxxxxxxxxxxxxxxx', vectors);
+            this.vectorDb?.addDocument(chunks)
         } catch (error) {
             console.error("Errore durante l'embedding:", error);
         }

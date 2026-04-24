@@ -85,7 +85,7 @@ services:
             PORT: "3002"
             OPENAI_API_KEY: ${OPENAI_API_KEY}
             NODE_ENV: ${NODE_ENV}
-            
+            DATABASE_URL: ${DATABASE_URL}
             
         extra_hosts:
             - 'host.docker.internal:host-gateway'

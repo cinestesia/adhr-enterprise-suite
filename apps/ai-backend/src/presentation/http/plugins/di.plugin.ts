@@ -7,19 +7,21 @@ import { IngestController } from '@/presentation/http/controllers/ingest.control
 import { IngestFileUseCase } from '@/application/use-cases/ingest-file.use-case'
 import { LocalStorageAdapter } from '@/infrastructure/storage/local-storage.adapter'
 import { OllamaAdapter } from '@/infrastructure/ai/ollama-adapter'
+import { PgVectorAdapter } from '@/infrastructure/ai/pg-vector-adapter'
 
 export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     
     // Chat controller
     const aiAdapter = new OllamaAdapter()
+    const vectorDbAdapter = new PgVectorAdapter(aiAdapter)
     const chatUseCase = new ChatUseCase(aiAdapter)
     const chatController = new ChatController(chatUseCase)
 
     // File ingestion controller
     const storageAdapter = new LocalStorageAdapter() 
-    const ingestFileUseCase = new IngestFileUseCase(storageAdapter, aiAdapter) 
+    const ingestFileUseCase = new IngestFileUseCase(storageAdapter, vectorDbAdapter) 
     const ingestController = new IngestController(ingestFileUseCase)
-
+    
     fastify.decorate('chatController', chatController)
     fastify.decorate('ingestController', ingestController)
 })
