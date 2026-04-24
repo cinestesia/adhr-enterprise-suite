@@ -1,6 +1,6 @@
 /**
  * Questo è uno schema di validazione e definisce cosa entra e cosa
- * esce dal sistema.  
+ * esce dal sistema..
  */
 import { z } from 'zod'
 
