@@ -4,6 +4,7 @@ kind: Ingress
 metadata:
     name: "{{ .Release.Name }}-ingress"
     annotations:
+
         nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.whitelistSourceRange }}
         # Questa riga è fondamentale per far capire a Nginx come gestire i percorsi
         # sto dicendo: caro Nginx se fai rewrite  manda tutto a / 
@@ -11,6 +12,15 @@ metadata:
         # Avviene solo se il path è del tipo: path: /(.*) cioè cattura qualcosa 
         # cioè se sotto mettessimo: path: /ciccio/(.*) allora il rewrite sarebbe: /ciccio/$1
         nginx.ingress.kubernetes.io/rewrite-target: /
+        #   --- AGGIUNTE PER STREAMING E LUNGHE ATTESE ---
+        # buffering disabilitato: Nginx invierà i token al browser non appena 
+        # arrivano da Next.js/Ollama, senza aspettare che la risposta sia finita.
+        nginx.ingress.kubernetes.io/proxy-buffering: "off"
+        # Alza i timeout a 10 minuti (600 secondi) per coprire i tuoi 4 minuti di elaborazione.
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+        nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+
         {{- with .Values.ingress.annotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

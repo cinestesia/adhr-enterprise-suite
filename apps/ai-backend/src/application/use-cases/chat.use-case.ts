@@ -12,7 +12,7 @@ export class ChatUseCase {
         message: string, // es. ciao come va?
         history: any[] = [], // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" } ]
         department?: string // <--- Opzionale, per filtrare i documenti in base al dipartimento
-    ): Promise<IterableReadableStream<string>> {
+    ): Promise<IterableReadableStream<string>> { 
         if (!message || message.trim() === '') {
             throw new Error('Il messaggio non può essere vuoto')
         }
