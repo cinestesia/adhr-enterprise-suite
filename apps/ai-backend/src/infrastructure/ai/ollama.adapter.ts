@@ -6,23 +6,23 @@
  * risultati più creativi o inaspettati (come 0.9). Compiti differenti richiederanno valori differenti
  * per questo parametro. Per esempio, la produzione di output strutturato di solito beneficia di
  * una temperatura più bassa, mentre compiti di scrittura creativa riescono meglio con un valore più alto.
- * 
+ *
  * @embeddings
- * 
+ *
  * Stiamo utilizzando al momento di default: paraphrase-multilingual-MiniLM-L12-v2
- * 
+ *
  * curl http://localhost:8080/models/apply \
  *    -X POST \
  *    -H "Content-Type: application/json" \
  *    -d '{
- *      "id": "model-gallery@paraphrase-multilingual-MiniLM-L12-v2", 
+ *      "id": "model-gallery@paraphrase-multilingual-MiniLM-L12-v2",
  *      "name": "adhr-text-embedding"
  *    }'
  */
 
 import { IChatPort } from '@/domain/ports/chat.port'
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
 import { Message } from '@/domain/models/chat'
+import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
@@ -32,10 +32,8 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
     private model: ChatOpenAI
     private embeddings: OpenAIEmbeddings
 
-    constructor() { 
-        
+    constructor() {
         this.model = new ChatOpenAI({
-            
             openAIApiKey: process.env.OPENAI_API_KEY || 'ollama',
 
             configuration: {
@@ -43,33 +41,29 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
             },
 
             model: process.env.AI_MODEL_NAME || 'llama3.1',
-        
-            temperature: 0.7,
+
+            temperature: 0.1, // Ollama è più affidabile con temperature basse, soprattutto per output tecnici e strutturati.
+
             // Ollama è veloce, ma Llama 3.1 8B su CPU può avere latenza iniziale
             // puoi aggiungere un timeout se necessario
         })
 
         this.embeddings = new OpenAIEmbeddings({
-            
             openAIApiKey: process.env.OPENAI_API_KEY || 'ollama',
-            
+
             configuration: {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:11434/v1',
             },
 
             modelName: process.env.AI_EMBEDDING_MODEL_NAME || 'nomic-embed-text',
-
         })
     }
 
-    // es. { message: "Ciao", history: [{ role: 'system', content: 'Sei un assistente amichevole' }] }
-
     async chat(
-        message: string,
-        history: Message[]
+        message: string, // es. ciao come va?
+        history: Message[] // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" },{ role: "system", content: "Utilizza esclusivamente il seguente contesto aziendale per rispondere alla domanda dell'utente. Se la risposta non è presente, ammetti di non saperlo. CONTESTO: [estratto dei documenti]" }]
     ): Promise<IterableReadableStream<string>> {
         const langChainMessages = history.map((msg) => {
-            
             if (msg.role === 'user') {
                 return new HumanMessage(msg.content)
             }
@@ -85,7 +79,7 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
 
         try {
             const parser = new StringOutputParser()
-            
+
             /**
              * @note
              * this.model.pipe(parser) crea un oggetto Runnable.

@@ -1,11 +1,11 @@
 import { pgTable, uuid, text, jsonb, timestamp, customType } from 'drizzle-orm/pg-core'
 
-const EMBEDDING_DIM = 768;
+const EMBEDDING_DIM = 768
 
 const vector = customType<{ data: number[] }>({
-  dataType() {
-    return `vector(${EMBEDDING_DIM})`;
-  },
+    dataType() {
+        return `vector(${EMBEDDING_DIM})`
+    },
 })
 
 // Tabelle documenti ( Il "Padre" )
@@ -21,22 +21,22 @@ export const documents = pgTable('documents', {
 
 /**
  * Tabella dei chunk  ( I "Figli" del "Padre" con i relativi vettori )
- * 
+ *
  * @note
- * 
+ *
  * { onDelete: 'cascade' }
- * 
+ *
  * Se l'HR Manager decide di cancellare il documento "Manuale 2023"
- * ancellando la riga nella tabella documents, Postgres eliminerà automaticamente 
+ * ancellando la riga nella tabella documents, Postgres eliminerà automaticamente
  * tutti i migliaia di vettori associati nella tabella chunks
- * 
- * jsonb('metadata'): 
- * Usiamo jsonb invece di json perché è indicizzabile su Postgres. Se in futuro si vorrà 
- * filtrare velocemente per "tutti i chunk che appartengono al Capitolo 5", 
+ *
+ * jsonb('metadata'):
+ * Usiamo jsonb invece di json perché è indicizzabile su Postgres. Se in futuro si vorrà
+ * filtrare velocemente per "tutti i chunk che appartengono al Capitolo 5",
  * lo si potrà fare con una query SQL performante.
- * 
+ *
  * I metadata saranno qualcosa del tipo:
- * 
+ *
  *"metadata": {
  *   "source": "faq_assistenza_inrecruiting.docx",
  *   "blobType": "",
@@ -48,27 +48,44 @@ export const documents = pgTable('documents', {
  *     }
  *   }
  * }
- *      
+ *
  */
-export const documentChunks = pgTable("documents_chunks", {
-    
+export const documentChunks = pgTable('documents_chunks', {
     id: uuid().defaultRandom().primaryKey(),
-    
+
     documentId: uuid('document_id')
         .references(() => documents.id, { onDelete: 'cascade' })
         .notNull(),
-    
+
     content: text('content').notNull(),
     embedding: vector('embedding').notNull(),
-    metadata: jsonb('metadata') 
-
+    metadata: jsonb('metadata'),
 })
 
 /**
  * @note
  * Perchè abbiamo separato i documenti dai chunks?
- * Se cerchiamo qualcosa e troviamo un chunk rilevante, 
- * avere il document_id ci permette di risalire subito al file 
- * originale per mostrare all'utente: 
+ * Se cerchiamo qualcosa e troviamo un chunk rilevante,
+ * avere il document_id ci permette di risalire subito al file
+ * originale per mostrare all'utente:
  * "Ho trovato questo nel manuale 'Regolamento_Ferie.pdf'".
  */
+
+export const chatSessions = pgTable('chat_sessions', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(), // Id utente dal tuo sistema auth
+    title: text('title').default('Nuova Conversazione'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const chatMessages = pgTable('chat_messages', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sessionId: uuid('session_id').references(() => chatSessions.id, {
+        onDelete: 'cascade',
+    }),
+    role: text('role', { enum: ['system', 'user', 'assistant'] }).notNull(),
+    content: text('content').notNull(),
+    // Salviamo anche i metadati del RAG se vogliamo fare debug dopo
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+})

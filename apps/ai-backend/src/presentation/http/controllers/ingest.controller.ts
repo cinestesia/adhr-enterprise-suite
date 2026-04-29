@@ -7,7 +7,7 @@ export class IngestController {
     async handleUpload(request: FastifyRequest, reply: FastifyReply) {
         // Estraiamo il file dallo stream multipart
         const data = await request.file()
-        
+
         if (!data) {
             return reply.status(400).send({ error: 'Nessun file caricato' })
         }
@@ -21,12 +21,12 @@ export class IngestController {
 
             return reply.status(201).send({
                 message: 'Documento elaborato e indicizzato con successo',
-                file: fileName
+                file: fileName,
             })
-            
         } catch (error: unknown) {
             request.log.error(error)
-            const message = error instanceof Error ? error.message : 'Errore durante l\'ingestione'
+            const message =
+                error instanceof Error ? error.message : "Errore durante l'ingestione"
             return reply.status(500).send({ error: message })
         }
     }

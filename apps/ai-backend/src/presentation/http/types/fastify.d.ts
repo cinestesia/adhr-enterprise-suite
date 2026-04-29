@@ -14,7 +14,7 @@ declare module 'fastify' {
     }
 
     interface FastifyInstance {
-        chatController: ChatController,
+        chatController: ChatController
         ingestController: IngestController
     }
 }

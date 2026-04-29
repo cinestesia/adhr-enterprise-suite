@@ -1,15 +1,5 @@
 import { useState, useCallback } from 'react'
 
-/**
- *
- * Tu scrivi: "Ciao". -> LLM risponde: "Ehi!".
- *
- * Tu scrivi: "Come va?". -> L'app manda:
- * [User: Ciao] + [Assistant: Ehi!] + [User: Come va?].
- *
- *
- *
- */
 export interface Message {
     role: 'user' | 'assistant'
     content: string
@@ -20,17 +10,17 @@ export function useChat() {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?",
+            content:
+                "Ciao! Sono l'assistente AI di ADHR Group. Posso aiutarti con informazioni tecniche o procedure aziendali. Di cosa hai bisogno?",
         },
     ])
 
     const [isLoading, setIsLoading] = useState(false)
 
-    // Aggiungiamo uno stato per capire se il server ha risposto al primo byte
     const [isTyping, setIsTyping] = useState(false)
 
     /**
-     *
+     * @note
      * In JavaScript, ogni volta che un componente viene renderizzato,
      * tutte le funzioni definite al suo interno vengono create ex-novo.
      * Senza useCallback, la funzione sendMessage sarebbe un oggetto
@@ -41,43 +31,33 @@ export function useChat() {
      * ( se la chat dura ore, supereremo il limite di token del modello),
      * ma di solito si inviano gli ultimi 10-20 messaggi.
      *
-     *
-     *
      */
     const sendMessage = useCallback(
         async (content: string) => {
             if (!content.trim()) return
-            const usrMsg: Message = { role: 'user', content } // messaggio corrente
-            const updatedHistory = [...messages, usrMsg] // history
+            const usrMsg: Message = { role: 'user', content }
+            const updatedHistory = [...messages, usrMsg]
 
             setMessages((prev) => {
                 console.log('DEB:', [...prev, usrMsg])
                 return [...prev, usrMsg]
             })
-            // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" } ]
+
             setIsLoading(true)
 
             try {
                 setError(null)
-
+                // Es. [{ "role": "assistant", "content": "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?"},{ "role": "user","content": "ciao come va?"}]
                 const response = await fetch('api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ messages: updatedHistory }),
                 })
 
-                // es. [
-                //  { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" },
-                //  { role: "assistan", content: '' }
-                // ]
                 setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
-
                 setIsTyping(true)
-
                 const reader = response.body?.getReader()
-
                 if (!reader) return
-
                 let accumulatedContent = ''
 
                 /**
@@ -85,7 +65,6 @@ export function useChat() {
                  * che serve a convertire flussi di dati binari (come byte)
                  * in stringhe di testo leggibili.
                  */
-
                 const decoder = new TextDecoder()
                 let leftover = ''
 
@@ -113,7 +92,6 @@ export function useChat() {
                                     parsed.error.message ||
                                         'Errore durante la generazione'
                                 )
-
                                 // Rimuove la bolla vuota dell'assistente
                                 setMessages((prev) => prev.slice(0, -1))
                                 // SCELTA 1 ==> break; // Esci dal ciclo di streaming
@@ -137,7 +115,6 @@ export function useChat() {
                                 })
                             }
                         } catch (e) {
-                            // Ignoriamo righe che non sono JSON valido (es: messaggi di [DONE])
                             console.warn('Errore parsing chunk:', e)
                         }
                     }

@@ -20,7 +20,7 @@ export interface AppConfig {
 
 const APPS_DATA = [
     {
-        title: 'AI Agent',
+        title: 'Chatbot AI Agent',
         description: 'AI Agent & Chatbot assistenti',
         icon: Bot,
         color: 'bg-[#A00407]',

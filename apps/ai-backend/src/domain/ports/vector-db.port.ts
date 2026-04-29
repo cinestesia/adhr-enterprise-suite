@@ -1,42 +1,40 @@
-import { Document } from '@langchain/core/documents';
-import { ProcessedDocument } from '../models/document'
+import { Document } from '@langchain/core/documents'
 
 /**
  * In produzione non posso salvare solo vettore. Servono
  * i metadati strutturati. Se un HR Manager carica un file
  * il sistema deve sapere chi lo ha caricato a quale categoria
  * appartiene e se è ancora valido.
- * 
- * Il know-how è organizzato per **segmentazione** Non vogliamo 
- * che un dipendente chieda "Come si resetta la password?" 
+ *
+ * Il know-how è organizzato per **segmentazione** Non vogliamo
+ * che un dipendente chieda "Come si resetta la password?"
  * e riceva come risposta un pezzo del "Manuale della Macchina del Caffè".
- * 
+ *
  * 1.   Namespace/Tenancy: Organizziamo i documenti per topic o department.
  * 2.   Filtri Metadati: Quando l'agente interroga il database, non cerca in "tutto il mondo",
  *      ma aggiunge un filtro SQL: WHERE metadata->>'department' = 'IT'.
- * 
- * 
+ *
+ *
  */
 export interface VectorSearchResult {
-    content: string, 
+    content: string
     metadata: Record<string, any>
-    similarity: number 
+    similarity: number
 }
-
 
 export interface IVectorDbPort {
     /**
      * salva una lista di chunk nel database.
      * Il metodo si occupa di generare gli embeddings
-     * tramite il provider deciso. 
+     * tramite il provider deciso.
      */
-    addDocument(chunks: Document[]): Promise<void>;
+    addDocument(chunks: Document[]): Promise<void>
 
     /**
-     * Il parametro filters nel metodo similaritySearch 
+     * Il parametro filters nel metodo similaritySearch
      * permette di isolare la conoscenza:
      * "Cerca solo nei documenti dove department === 'HR'".
-     * 
+     *
      * Cerca i chunk più simili a una query testuale.
      * @param query Il testo della domanda dell'utente.
      * @param limit Numero di risultati da restituire (default top 4).
@@ -46,18 +44,17 @@ export interface IVectorDbPort {
     similaritySearch(
         query: string,
         limit?: number,
-        filters?: Record<string, any>,     
+        filters?: Record<string, any>
     ): Promise<VectorSearchResult[]>
 
     /**
      * Rimuove tutti i chunk associati a un specifico file.
-     * Indispensabile per aggiornare i documenti senza duplicare 
-     * la conoscenza. Senza deleteBySource, se l'HR Manager 
-     * carica due volte lo stesso manuale corretto, il bot 
+     * Indispensabile per aggiornare i documenti senza duplicare
+     * la conoscenza. Senza deleteBySource, se l'HR Manager
+     * carica due volte lo stesso manuale corretto, il bot
      * darebbe risposte duplicate o contrastanti.
      */
-    deleteBySource(sourceName: string): Promise<void>;
-
+    deleteBySource(sourceName: string): Promise<void>
 }
 
 /**
@@ -67,5 +64,5 @@ export interface IVectorDbPort {
  * L'Agente capisce che deve cercare nei documenti.
  * Chiama il vectorDb.similaritySearch("policy ferie", 3, { department: 'HR' }).
  * Riceve i chunk, li inserisce nel prompt e risponde in modo accurato.
- * 
+ *
  */

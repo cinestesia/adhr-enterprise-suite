@@ -6,16 +6,16 @@
  * risultati più creativi o inaspettati (come 0.9). Compiti differenti richiederanno valori differenti
  * per questo parametro. Per esempio, la produzione di output strutturato di solito beneficia di
  * una temperatura più bassa, mentre compiti di scrittura creativa riescono meglio con un valore più alto.
- * 
+ *
  * @embeddings
- * 
+ *
  * Stiamo utilizzando al momento di default: paraphrase-multilingual-MiniLM-L12-v2
- * 
+ *
  * curl http://localhost:8080/models/apply \
  *    -X POST \
  *    -H "Content-Type: application/json" \
  *    -d '{
- *      "id": "model-gallery@paraphrase-multilingual-MiniLM-L12-v2", 
+ *      "id": "model-gallery@paraphrase-multilingual-MiniLM-L12-v2",
  *      "name": "adhr-text-embedding"
  *    }'
  */
@@ -33,30 +33,26 @@ export class LocalAIAdapter implements IChatPort, IEmbeddingsPort {
     private embeddings: OpenAIEmbeddings
 
     constructor() {
-        
         this.model = new ChatOpenAI({
-            
             openAIApiKey: process.env.OPENAI_API_KEY || 'sk-no-key-required',
 
             configuration: {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:8080/v1',
             },
 
-            model: process.env.AI_MODEL_NAME || 'gpt-4', 
-        
+            model: process.env.AI_MODEL_NAME || 'gpt-4',
+
             temperature: 0.7,
         })
 
         this.embeddings = new OpenAIEmbeddings({
-            
             openAIApiKey: process.env.OPENAI_API_KEY || 'sk-no-key-required',
-            
+
             configuration: {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:8080/v1',
             },
 
             modelName: process.env.AI_EMBEDDING_MODEL_NAME || 'adhr_embedding_model',
-
         })
     }
 
@@ -67,7 +63,6 @@ export class LocalAIAdapter implements IChatPort, IEmbeddingsPort {
         history: Message[]
     ): Promise<IterableReadableStream<string>> {
         const langChainMessages = history.map((msg) => {
-            
             if (msg.role === 'user') {
                 return new HumanMessage(msg.content)
             }
@@ -83,7 +78,7 @@ export class LocalAIAdapter implements IChatPort, IEmbeddingsPort {
 
         try {
             const parser = new StringOutputParser()
-            
+
             /**
              * @note
              * this.model.pipe(parser) crea un oggetto Runnable.

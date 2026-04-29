@@ -29,8 +29,8 @@ export class ChatController {
             const conversationHistory = messages.slice(0, -1)
 
             const stream = await this.chatUseCase.execute(
-                lastUserMessage,
-                conversationHistory || []
+                lastUserMessage, // es. ciao come va?
+                conversationHistory || [] // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" } ]
             )
 
             for await (const chunk of stream) {

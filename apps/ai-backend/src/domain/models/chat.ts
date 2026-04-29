@@ -4,9 +4,7 @@
  */
 import { z } from 'zod'
 
-
-
-// Ogni volta che l'utente invia un messaggio, oppure l'IA risponde, 
+// Ogni volta che l'utente invia un messaggio, oppure l'IA risponde,
 // creiamo un oggetto di questo tipo.
 
 export const MessageSchema = z.object({

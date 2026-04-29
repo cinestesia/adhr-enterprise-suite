@@ -9,9 +9,9 @@ import { ingestRoutes } from './presentation/http/routes/ingest.routes'
 
 /**
  * @note
- * Di default, Pino scrive i log in un formato JSON compresso 
+ * Di default, Pino scrive i log in un formato JSON compresso
  * e bruttissimo da leggere per un essere umano, ma perfetto
- * per i computer (e per hub di log tipo Azure Kubernetes).  
+ * per i computer (e per hub di log tipo Azure Kubernetes).
  *
  */
 const app = fastify({
@@ -30,10 +30,11 @@ const envSchema = {
         PORT: { type: 'string', default: '3002' },
         HOST: { type: 'string', default: '0.0.0.0' },
         AI_BASE_URL: { type: 'string' },
-        AI_MODEL_NAME: { type: 'string', default: 'qwen2.5-1.5b-instruct.gguf' },
+        AI_MODEL_NAME: { type: 'string', default: 'llama3.1' },
+        AI_EMBEDDING_MODEL_NAME: { type: 'string', default: 'nomic-embed-text' },
         OPENAI_API_KEY: { type: 'string', default: 'not-used' },
         CORS_ORIGIN: { type: 'string', default: '*' },
-
+        DATABASE_URL: { type: 'string' },
     },
 }
 
@@ -54,11 +55,11 @@ const start = async () => {
          * @note
          * Registriamo multipart per gestire i file caricati
          * Questo è un middleware parser agganciato al ciclo di vita della richiesta.
-         * Di default Fastify sa bene gestire @application/json o text/plain 
+         * Di default Fastify sa bene gestire @application/json o text/plain
          * ma se inviamo un form come multipart/form-data astify non saprebbe come leggerlo
-         * Registrando questo plugin, istruisci l'app a riconoscere quel Content-Type 
+         * Registrando questo plugin, istruisci l'app a riconoscere quel Content-Type
          * specifico.
-        */
+         */
         await app.register(multipart, {
             limits: {
                 fileSize: 10 * 1024 * 1024, // Limite 10MB
@@ -68,34 +69,35 @@ const start = async () => {
 
         /**
          * @note
-         * Qui stiamo aggiungndo un hook, un intercettore nella fase di onRequest 
-         * che implementa le regole CORS. 
-         * 
-         * Quando un browser (es. Chrome o Firefox) cerca di fare una chiamata POST 
-         * al servizio da un dominio diverso (es. il frontend su localhost:3000 verso 
+         * Qui stiamo aggiungndo un hook, un intercettore nella fase di onRequest
+         * che implementa le regole CORS.
+         *
+         * Quando un browser (es. Chrome o Firefox) cerca di fare una chiamata POST
+         * al servizio da un dominio diverso (es. il frontend su localhost:3000 verso
          * il backend su localhost:3002), il browser non invia subito i dati.
-         * 
+         *
          * Prima invia una richiesta di prova chiamata OPTIONS.
          * Senza questo plugin: Fastify risponderebbe con un errore o non saprebbe cosa fare.
-         * Con il plugin: Il server risponde automaticamente: 
-         * "Ehi browser, sono pronto! Accetto chiamate da questo dominio (ORIGIN) e 
+         * Con il plugin: Il server risponde automaticamente:
+         * "Ehi browser, sono pronto! Accetto chiamate da questo dominio (ORIGIN) e
          * con questi metodi".
          */
         await app.register(cors, {
             origin: app.config.CORS_ORIGIN,
             methods: ['GET', 'POST'],
         })
-        
+
         // registra il plugin che crea e inietta il controller, use case, adapter)
-        await app.register(diPlugin) 
+        await app.register(diPlugin)
         await app.register(healthRoutes) // Omesso il porefix perchè, è solo /health
         await app.register(chatRoutes, { prefix: '/api/v1' })
-        await app.register(ingestRoutes, { prefix: '/api/v1'})
-        
+        await app.register(ingestRoutes, { prefix: '/api/v1' })
+
         const port = Number(app.config.PORT)
         const host = app.config.HOST
 
         await app.listen({ port, host })
+        console.log('Config caricata:', app.config)
         app.log.info(`🚀 ai-backend in ascolto su http://${host}:${port}`)
     } catch (err) {
         app.log.error(err)
