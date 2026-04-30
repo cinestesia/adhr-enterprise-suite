@@ -2,7 +2,7 @@
  * Questo è uno schema di validazione e definisce cosa entra e cosa
  * esce dal sistema..
  */
-import { z } from 'zod'
+import { z } from 'zod' 
 
 // Ogni volta che l'utente invia un messaggio, oppure l'IA risponde,
 // creiamo un oggetto di questo tipo.
