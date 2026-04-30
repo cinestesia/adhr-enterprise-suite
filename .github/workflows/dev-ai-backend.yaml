@@ -66,7 +66,7 @@ jobs:
                     --set env.PORT="3002" \
                     --set env.HOSTNAME="0.0.0.0" \
                     --set secretEnv.DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-                    --set env.AI_MODEL_NAME="phi3" \
+                    --set env.AI_MODEL_NAME="llama3.1" \
                     --set env.AI_EMBEDDING_MODEL_NAME="nomic-embed-text" \
                     --set env.AI_BASE_URL="http://ai-service.development.svc.cluster.local/v1" \
                     --set secretEnv.OPENAI_API_KEY="ollama"

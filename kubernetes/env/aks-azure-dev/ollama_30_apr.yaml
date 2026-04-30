@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-storage
+  namespace: development
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,8 +25,10 @@ spec:
       labels:
         app: ollama
     spec:
+      # 1. Seleziona il nodo con la label specifica
       nodeSelector:
         app: llm-worker
+      # 2. Permette al pod di ignorare il "divieto" (Taint) del nodo dedicato
       tolerations:
       - key: "dedicated"
         operator: "Equal"
@@ -28,19 +42,13 @@ spec:
         env:
         - name: OLLAMA_NUM_THREADS
           value: "4"
-        # --- NUOVE VARIABILI PER PRESTAZIONI ---
-        - name: OLLAMA_NUM_PARALLEL
-          value: "2"  # Permette di gestire più richieste
-        - name: OLLAMA_MAX_LOADED_MODELS
-          value: "2"  # Tiene sia Phi3 che l'Embedding in RAM
-        # ---------------------------------------
         resources:
           requests:
-            cpu: "3"    # Alzato leggermente per dare più stabilità
+            cpu: "2.5"
             memory: "8Gi"
           limits:
             cpu: "4"
-            memory: "12Gi" # 12Gi sono sufficienti per Phi3 (2.2GB) + Embeddings (0.3GB) + overhead
+            memory: "12Gi"
         volumeMounts:
         - name: data
           mountPath: /root/.ollama
@@ -48,3 +56,16 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: ollama-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: development
+spec:
+  selector:
+    app: ollama
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 11434
