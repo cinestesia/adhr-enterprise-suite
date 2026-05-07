@@ -1,6 +1,16 @@
 import { z } from 'zod';
-
-// Definiamo le estensioni permesse in una costante per riutilizzarla o modificarla facilmente
+/**
+ * Un DTO è un contratto che definisce come devono essere strutturati i dati per un caso d'uso specifico. 
+ * Dice: non mi intessa come i dati arrivano, ma come devono essere una volta che li ho.
+ * In questo caso, vogliamo che i dati di ingestione abbiano: 
+ * 
+ * 1. fileBuffer
+ * 2. fileName
+ * 3. department
+ * 
+ * Il controller si occupa di prendere i dati grezzi (es. multipart/form-data) e trasformarli in questo DTO.
+ * Il servizio si aspetta di ricevere un IngestRequestDTO già validato e strutturato, senza doversi preoccupare di come sono arrivati i dati.
+ */
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'md'];
 
 export const IngestRequestSchema = z.object({

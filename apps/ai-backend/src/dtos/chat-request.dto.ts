@@ -1,4 +1,3 @@
-// src/application/dtos/chat-request.dto.ts
 import { User } from '@/domain/models/user.model';
 import { z } from 'zod';
 
