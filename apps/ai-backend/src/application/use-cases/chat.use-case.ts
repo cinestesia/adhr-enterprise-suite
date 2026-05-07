@@ -1,80 +1,121 @@
+import { IChatRepository } from '@/domain/ports/chat-repository.port'
 import { IChatPort } from '@/domain/ports/chat.port'
 import { IVectorDbPort } from '@/domain/ports/vector-db.port'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
+import { ChatRequestDTO } from '@/dtos/chat-request.dto'
+import { ChatMessage } from '@/domain/models/chat-message.model' 
+import { randomUUID } from 'crypto'
+
+interface ChatUseCaseOutput {
+    stream: IterableReadableStream<string>
+    sessionId: string
+}
 
 export class ChatUseCase {
     constructor(
         private aiGateway: IChatPort,
         private vectorDb: IVectorDbPort,
+        private chatRepo: IChatRepository
     ) {}
 
-    async execute(
-        message: string, // es. ciao come va?
-        history: any[] = [], // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" } ]
-        department?: string // <--- Opzionale, per filtrare i documenti in base al dipartimento
-    ): Promise<IterableReadableStream<string>> { 
-        if (!message || message.trim() === '') {
-            throw new Error('Il messaggio non può essere vuoto')
+    /**
+     * Genera il titolo in modo asincrono (fire and forget)
+     */
+    private async generateTitleBackground(sessionId: string, userMessage: string) {
+        try {
+            const prompt = `Genera un titolo sintetico (max 5 parole) per una chat che inizia con: "${userMessage}". Rispondi SOLO con il titolo, senza virgolette.`
+            const title = await this.aiGateway.predict(prompt)
+            await this.chatRepo.updateSessionTitle(sessionId, title.trim())
+        } catch (err) {
+            console.error("[ChatUseCase] Background title generation failed:", err)
         }
+    }
+
+    async execute(dto: ChatRequestDTO): Promise<ChatUseCaseOutput> {
+        const { message, user } = dto
+        let { sessionId } = dto
+        const department = user.mainDepartment
+        let isNewSession = false
 
         try {
-            if (!this.vectorDb) {
-                console.warn(
-                    '[ChatUseCase] VectorDB non inizializzato, procedo in modalità chat standard'
-                )
-                return await this.aiGateway.chat(message, history)
-            }
-
-            // LIMITIAMO LA HISTORY: prendiamo solo gli ultimi 6 scambi (es. 3 domande e 3 risposte)
-            // Questo evita che la chat si gonfi all'infinito e mantiene l'attenzione sui temi recenti.
-            const limitedHistory = history.slice(-6)
-
             /**
-             * @note
-             * Per documenti molto lunghi o complessi, bisogna tenere d'occhio il valore di k nel
-             * similaritySearch (attualmente è 4). Se le risposte dovessero tornare a essere vaghe,
-             * potrebbe essere necessario aumentare questo valore per dare al modello più "pezzi" di contesto,
-             * ma per FAQ così dirette, 4 è solitamente il numero magico.
-             */
-            const chunks = await this.vectorDb.similaritySearch(message, 4, {
-                department,
-            })
-
-            // Creiamo una copia della history per non sporcare quella originale
-            let augmentedHistory = [...limitedHistory]
-
-            let finalMessage = message // es. ciao come va?
-
-            // AUGMENTATION (Se abbiamo trovato documenti pertinenti)
-            if (chunks.length > 0) {
-                const context = chunks.map((c) => c.content).join('\n\n---\n\n')
-
-                const systemInstruction = {
-                    role: 'system',
-                    content: `Sei un assistente tecnico aziendale. 
-                    Rispondi alle domande basandoti RIGOROSAMENTE sul CONTESTO fornito.
-                    - Non inventare passaggi tecnici o nomi di menu.
-                    - Se il contesto non contiene la risposta, di' chiaramente che non lo sai.
-                    - Non usare conoscenze esterne al di fuori del CONTESTO.
-                    
-                    CONTESTO:
-                    ${context}`,
-                }
-
-                augmentedHistory = [systemInstruction, ...limitedHistory]
-
-                // es. augmentedHistory diventa: [
-                //     { role: "system", content: "Sei un assistente ....  CONTESTO: [estratto dei documenti]" }
-                //     { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" },
-                // ]
+            * @note - CASO A: Nuova sessione.
+            * L'utente apre la pagina della chat. Il client non ha un sessionId.
+            * Invia la prima richiesta senza sessionId, il backend ne crea uno nuovo e lo restituisce.
+            * Inizialmente creiamo con un titolo provvisiorio e poi lo aggiorniamo dopo.  
+            */
+            if (!sessionId) {
+                sessionId = randomUUID()
+                isNewSession = true
+                await this.chatRepo.createSession(sessionId, user.id, `Conversazione ${department}`)
+            } else {
+                const isOwner = await this.chatRepo.checkSessionOwnership(sessionId, user.id)
+                if (!isOwner) throw new Error('Accesso negato: sessione non valida')
             }
 
-            const response = await this.aiGateway.chat(finalMessage, augmentedHistory)
-            return response
+            // 2. Recupero History (Ora sono istanze di ChatMessage)
+            const history = await this.chatRepo.getMessagesBySessionId(sessionId, 10)
+
+            // 3. Titolo asincrono se prima interazione, non blocchiamo la chat per questo.
+            if (isNewSession || history.length === 0) {
+                this.generateTitleBackground(sessionId, message)
+            }
+
+            // 4. Salvataggio Messaggio Utente (Creiamo l'istanza di Dominio)
+            const userMsg = new ChatMessage('user', message)
+            await this.chatRepo.saveMessage(sessionId, userMsg)
+
+            // 5. RAG & Augmented History
+            let augmentedHistory: ChatMessage[] = [...history]
+
+            if (this.vectorDb) {
+                const chunks = await this.vectorDb.similaritySearch(message, 4, { department })
+
+                if (chunks.length > 0) {
+                    const context = chunks.map((c) => c.content).join('\n\n---\n\n')
+                    
+                    // Creiamo il System Message come istanza di ChatMessage
+                    const systemMsg = new ChatMessage(
+                        'system', 
+                        `Sei un assistente tecnico di ADHR Group per il dipartimento ${department}. 
+                         Rispondi basandoti RIGOROSAMENTE sul CONTESTO fornito.
+                         CONTESTO: ${context}`
+                    )
+                    
+                    augmentedHistory = [systemMsg, ...history]
+                }
+            }
+
+            // 6. Chiamata AI & Streaming
+            const aiStream = await this.aiGateway.chat(message, augmentedHistory)
+            
+            return {
+                stream: this.wrapStreamToSave(aiStream, sessionId),
+                sessionId
+            }
+
         } catch (error) {
-            console.error('Error in ChatUseCase:', error)
-            throw new Error("Errore durante l'elaborazione della chat")
+            console.error('[ChatUseCase] Error:', error)
+            throw error
         }
+    }
+
+    private wrapStreamToSave(stream: any, sessionId: string): IterableReadableStream<string> {
+        const chatRepo = this.chatRepo
+
+        async function* generator() {
+            let fullContent = ''
+            for await (const chunk of stream) {
+                fullContent += chunk
+                yield chunk
+            }
+
+            // Quando salviamo la risposta, creiamo l'oggetto di Dominio
+            const assistantMsg = new ChatMessage('assistant', fullContent)
+            await chatRepo.saveMessage(sessionId, assistantMsg)
+        }
+
+        return IterableReadableStream.fromAsyncGenerator(generator())
     }
 }
 

@@ -21,7 +21,7 @@
  */
 
 import { IChatPort } from '@/domain/ports/chat.port'
-import { Message } from '@/domain/models/chat'
+import { Message } from '@/domain/models/chat-to-be-deleted'
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages'
 import { StringOutputParser } from '@langchain/core/output_parsers'
@@ -31,6 +31,32 @@ import { IEmbeddingsPort } from '@/domain/ports/embeddings.port'
 export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
     private model: ChatOpenAI
     private embeddings: OpenAIEmbeddings
+
+    async predict(prompt: string): Promise<string> {
+        try {
+            const response = await this.model.invoke(prompt);
+
+            // 1. Se il contenuto è già una stringa, lo restituiamo pulito
+            if (typeof response.content === 'string') {
+                return response.content;
+            }
+
+            // 2. Se è un array di blocchi (ContentBlock | Text), estraiamo solo le parti di testo
+            if (Array.isArray(response.content)) {
+                return response.content
+                    .map((block) => {
+                        if ("text" in block) return block.text; // Per i blocchi di testo standard
+                        return ""; // Ignoriamo immagini o altri tipi di blocchi per il titolo
+                    })
+                    .join("");
+            }
+
+            return "Nuova Conversazione"; // Fallback se il tipo è inaspettato
+        } catch (error) {
+            console.error("Errore durante predict:", error);
+            return "Nuova Conversazione";
+        }
+    }
 
     constructor() {
         this.model = new ChatOpenAI({
@@ -42,7 +68,7 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
 
             model: process.env.AI_MODEL_NAME || 'llama3.1',
 
-            temperature: 0.1, // Ollama è più affidabile con temperature basse, soprattutto per output tecnici e strutturati.
+            temperature: 0, // Ollama è più affidabile con temperature basse, soprattutto per output tecnici e strutturati.
 
             // Ollama è veloce, ma Llama 3.1 8B su CPU può avere latenza iniziale
             // puoi aggiungere un timeout se necessario

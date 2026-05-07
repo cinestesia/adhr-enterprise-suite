@@ -1,141 +1,121 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 export interface Message {
     role: 'user' | 'assistant'
     content: string
 }
 
-export function useChat() {
+/**
+ * @note
+ * la variabile accessToken nell'hook potrebbe servire per mostrare/nascondere il tasto "Invia". 
+ * Adesso non la sto in effetti utilizzando, ma può essere importante che venga passata da chi usa l'hook 
+ * (es. il componente ChatInput) 
+ * 
+ */
+export function useChat(accessToken?: string) { // <--- Riceviamo il token (es. da NextAuth o Keycloak)
     const [error, setError] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([
-        {
-            role: 'assistant',
-            content:
-                "Ciao! Sono l'assistente AI di ADHR Group. Posso aiutarti con informazioni tecniche o procedure aziendali. Di cosa hai bisogno?",
-        },
+        { role: 'assistant', content: "Ciao! Sono l'assistente AI di ADHR Group..." },
     ])
-
     const [isLoading, setIsLoading] = useState(false)
-
     const [isTyping, setIsTyping] = useState(false)
+    
+    // Usiamo un ref per persistere il sessionId tra i vari sendMessage senza triggerare re-render
+    const sessionIdRef = useRef<string | null>(null)
 
-    /**
-     * @note
-     * In JavaScript, ogni volta che un componente viene renderizzato,
-     * tutte le funzioni definite al suo interno vengono create ex-novo.
-     * Senza useCallback, la funzione sendMessage sarebbe un oggetto
-     * nuovo ogni volta che scrivi un carattere nell'input o arriva un
-     * token dall'AI).
-     *
-     * Quando inviamo lo storico, non dobbiamo mandare proprio tutti i messaggi
-     * ( se la chat dura ore, supereremo il limite di token del modello),
-     * ma di solito si inviano gli ultimi 10-20 messaggi.
-     *
-     */
     const sendMessage = useCallback(
         async (content: string) => {
-            if (!content.trim()) return
+            if (!content.trim() || !accessToken) return // Non partiamo senza token
+
             const usrMsg: Message = { role: 'user', content }
-            const updatedHistory = [...messages, usrMsg]
-
-            setMessages((prev) => {
-                console.log('DEB:', [...prev, usrMsg])
-                return [...prev, usrMsg]
-            })
-
+            setMessages((prev) => [...prev, usrMsg])
             setIsLoading(true)
 
             try {
                 setError(null)
-                // Es. [{ "role": "assistant", "content": "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?"},{ "role": "user","content": "ciao come va?"}]
+                
+                /**
+                 *  @note
+                 * 
+                 *  {
+                 *      "message": "Ciao, come posso candidarmi per una posizione?",
+                 *      "sessionId": "abc-123-def-456"
+                 *  }
+                 * 
+                 * 
+                 */
                 const response = await fetch('api/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: updatedHistory }),
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // MESSO IN api/chat ==> 'Authorization': `Bearer ${accessToken}` 
+                    },
+                    body: JSON.stringify({ 
+                        message: content,                        
+                        sessionId: sessionIdRef.current || undefined 
+                    }),
                 })
+
+                if (!response.ok) throw new Error('Errore di rete')
 
                 setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
                 setIsTyping(true)
+                
                 const reader = response.body?.getReader()
                 if (!reader) return
+                
                 let accumulatedContent = ''
-
-                /**
-                 * TextDecoder fa parte delle API browser moderni e anche di Node.js
-                 * che serve a convertire flussi di dati binari (come byte)
-                 * in stringhe di testo leggibili.
-                 */
                 const decoder = new TextDecoder()
                 let leftover = ''
 
                 while (true) {
                     const { done, value } = await reader.read()
                     if (done) break
+                    
                     const chunk = decoder.decode(value, { stream: true })
-
-                    // Dividiamo il chunk in righe (un chunk può contenere più righe data:)
-                    const combined = leftover + chunk
-                    const lines = combined.split('\n')
-                    // L'ultima riga potrebbe essere incompleta, la salviamo per il prossimo giro
+                    const lines = (leftover + chunk).split('\n')
                     leftover = lines.pop() || ''
 
                     for (const line of lines) {
                         const trimmedLine = line.trim()
                         if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue
+                        
                         const jsonString = trimmedLine.replace('data: ', '')
-
                         try {
                             const parsed = JSON.parse(jsonString)
-                            // 1. Gestione errore specifico inviato dal backend
+
+                            // GESTIONE SESSIONE: Se il backend ci manda l'ID, salviamolo
+                            if (parsed.type === 'session_id') {
+                                sessionIdRef.current = parsed.content
+                                continue
+                            }
+
                             if (parsed.type === 'error') {
-                                setError(
-                                    parsed.error.message ||
-                                        'Errore durante la generazione'
-                                )
-                                // Rimuove la bolla vuota dell'assistente
+                                setError(parsed.error.message)
                                 setMessages((prev) => prev.slice(0, -1))
-                                // SCELTA 1 ==> break; // Esci dal ciclo di streaming
-                                // SCELTA 2 ==> return; // Esce da tutto: for, while e sendMessage
-                                // SCELTA 3 ==> await reader.cancel(); // Chiude il flusso lato client
-                                // break ( MA DEVI AVERE UN MODO DI USCIRE DAL WHILE )
                                 return
                             }
 
-                            if (parsed.content) {
+                            if (parsed.type === 'token') {
                                 accumulatedContent += parsed.content
                                 setMessages((prev) => {
                                     const newMessages = [...prev]
-                                    const lastIndex = newMessages.length - 1
-                                    newMessages[lastIndex] = {
-                                        ...newMessages[lastIndex],
-                                        content: accumulatedContent,
-                                    }
-
+                                    newMessages[newMessages.length - 1].content = accumulatedContent
                                     return newMessages
                                 })
                             }
-                        } catch (e) {
-                            console.warn('Errore parsing chunk:', e)
-                        }
+                        } catch (e) { console.warn(e) }
                     }
                 }
             } catch (error) {
-                setError(
-                    'Non sono riuscito a rispondere. Controlla la connessione o riprova più tardi.'
-                )
+                setError('Errore di connessione.')
             } finally {
                 setIsLoading(false)
                 setIsTyping(false)
             }
         },
-        [messages]
-    ) // se messages cambia scatta una foto della situazione e aggiorna sendMessage
+        [accessToken] // Tolto [messages] per evitare ricreazioni inutili dell'hook
+    )
 
-    return {
-        error,
-        messages,
-        isLoading,
-        isTyping,
-        sendMessage,
-    }
+    return { error, messages, isLoading, isTyping, sendMessage }
 }

@@ -22,7 +22,7 @@
 
 import { IChatPort } from '@/domain/ports/chat.port'
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
-import { Message } from '@/domain/models/chat'
+import { Message } from '@/domain/models/chat-to-be-deleted'
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { IterableReadableStream } from '@langchain/core/utils/stream'

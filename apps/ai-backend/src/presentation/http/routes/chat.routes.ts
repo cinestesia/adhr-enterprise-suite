@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import { ChatRequestSchema } from '@/domain/models/chat'
+import { ChatRequestSchema } from '@/domain/models/chat-to-be-deleted'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 
 export async function chatRoutes(

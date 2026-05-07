@@ -8,6 +8,7 @@ import { LocalStorageAdapter } from '@/infrastructure/storage/local-storage.adap
 import { OllamaAdapter } from '@/infrastructure/ai/ollama.adapter'
 import { PgVectorAdapter } from '@/infrastructure/ai/pg-vector.adapter'
 import { createDbClient } from '@/infrastructure/db'
+import { PgChatAdapter } from '@/infrastructure/db/pg-chat.adapter'
 
 export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     // Chat controller
@@ -16,7 +17,8 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
         aiAdapter,
         createDbClient(process.env.DATABASE_URL!)
     )
-    const chatUseCase = new ChatUseCase(aiAdapter, vectorDbAdapter)
+    const chatRepo = new PgChatAdapter(createDbClient(process.env.DATABASE_URL!))
+    const chatUseCase = new ChatUseCase(aiAdapter, vectorDbAdapter, chatRepo)
     const chatController = new ChatController(chatUseCase)
 
     // File ingestion controller

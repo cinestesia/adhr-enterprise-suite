@@ -9,5 +9,5 @@ export const createDbClient = (connectionString: string) => {
     return drizzle(client, { schema })
 }
 
-// Esporta il tipo per usarlo negli adapter 
+// Esporta il tipo per usarlo negli adapter
 export type DbInstance = ReturnType<typeof createDbClient>

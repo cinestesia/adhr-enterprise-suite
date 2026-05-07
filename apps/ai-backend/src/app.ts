@@ -1,11 +1,13 @@
 import fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifyEnv from '@fastify/env'
+import multipart from '@fastify/multipart'
+
 import { diPlugin } from '@/presentation/http/plugins/di.plugin'
 import { chatRoutes } from '@/presentation/http/routes/chat.routes'
 import { healthRoutes } from '@/presentation/http/routes/health-routes'
-import multipart from '@fastify/multipart'
 import { ingestRoutes } from './presentation/http/routes/ingest.routes'
+import { authPlugin } from './presentation/http/plugins/auth.plugin'
 
 /**
  * @note
@@ -50,6 +52,8 @@ const options = {
 const start = async () => {
     try {
         await app.register(fastifyEnv, options)
+        
+        app.register(authPlugin)
 
         /**
          * @note

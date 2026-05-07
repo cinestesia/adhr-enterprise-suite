@@ -97,6 +97,8 @@ export function AppNavbar() {
                 </p>
                 <p className="text-xs leading-none text-adhr-zinc-medium font-medium">
                   {user?.email}
+                  {user?.groups && ` - ${user.groups.join(', ')}`}
+                  {user?.roles && ` - ${user.roles.join(', ')}`}
                 </p>
               </div>
             </DropdownMenuLabel>

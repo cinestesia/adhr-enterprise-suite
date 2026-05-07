@@ -1,5 +1,5 @@
 'use client'
-import { Message } from '@/hooks/use-chat'
+import { Message } from '@/hooks/use-chat-old'
 import { cn } from '@/lib/utils'
 import { Bot, User } from 'lucide-react'
 import { useEffect, useRef } from 'react'

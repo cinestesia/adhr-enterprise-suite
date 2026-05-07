@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-engine
+  namespace: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      nodeSelector:
+        # Se hai creato il pool "tempcpu" (Standard_F8s_v2), usa questa label:
+        app: ollama-temp 
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+        env:
+        # F8s_v2 ha 8 core. Dedichiamone 6 a Ollama per non saturare tutto
+        - name: OLLAMA_NUM_THREADS
+          value: "6"
+        - name: OLLAMA_NUM_PARALLEL
+          value: "1"  # Su CPU meglio gestire 1 richiesta alla volta per non morire
+        - name: OLLAMA_MAX_LOADED_MODELS
+          value: "1"  # Llama 3.1 8B occupa molto, meglio non sovraccaricare
+        resources:
+          requests:
+            cpu: "6"    # Più core = più velocità su CPU
+            memory: "8Gi"
+          limits:
+            cpu: "7"
+            memory: "10Gi" # Llama 3.1 (4.7GB) + OS + Buffer
+        volumeMounts:
+        - name: data
+          mountPath: /root/.ollama
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ollama-storage

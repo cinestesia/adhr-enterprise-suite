@@ -90,12 +90,14 @@ export class PgVectorAdapter implements IVectorDbPort {
                 similarity: similarityScore,
             })
             .from(documentChunks)
+            .innerJoin(documents, eq(documentChunks.documentId, documents.id))
             .where(
                 filters?.department
-                    ? eq(
-                          sql<string>`${documentChunks.metadata}->>'department'`,
-                          filters.department
-                      )
+                    ? eq(documents.department, filters.department) // <--- Filtro sul padre
+                    // ? eq(
+                    //       sql<string>`${documentChunks.metadata}->>'department'`,
+                    //       filters.department
+                    //   )
                     : undefined
             )
             .orderBy(sql`${documentChunks.embedding} <=> ${vectorString}::vector`)

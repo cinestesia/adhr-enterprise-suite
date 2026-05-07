@@ -1,8 +1,9 @@
 'use client'
 import { ChatInput } from './ChatInput'
 import { ChatList } from './ChatList'
-import { useChat } from '@/hooks/use-chat'
+import { useChat } from '@/hooks/use-chat-old'
 import { useOnlineStatus } from '@/hooks/use-online-status'
+
 export default function AIAgentPage() {
   const { error, messages, isLoading, isTyping, sendMessage } = useChat()
   const isOnline = useOnlineStatus()
