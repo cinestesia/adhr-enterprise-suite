@@ -12,7 +12,9 @@ config:
 ingress:
     enabled: true
     host: 'welcome.4.232.3.98.nip.io'
-
+    annotations:
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+        nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
 ambiente: azure
 replicaCount: 1
 
