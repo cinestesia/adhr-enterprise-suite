@@ -25,7 +25,6 @@ export function useChat(initialSessionId: string | undefined) {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [isTyping, setIsTyping] = useState<boolean>(false)
     const [messages, setMessages] = useState<Message[]>([welcomeMessage])
-    console.log("DIIIIIIIIIOOOOOOOOOOOOOOOOOOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE", initialSessionId)
 
     /**
      * @note

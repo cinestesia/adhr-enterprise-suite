@@ -7,10 +7,11 @@ export class ChatStreamService {
 
     /**
      * Intercetta i chunk dello stream AI, li accumula e salva il messaggio finale.
+     * ok.
      */
     getWrappedStream(rawStream: any, sessionId: string): IterableReadableStream<string> {
         const repo = this.chatRepo;
-
+ 
         async function* generator() {
             let fullContent = '';
             
