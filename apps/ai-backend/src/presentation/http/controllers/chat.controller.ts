@@ -1,29 +1,67 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { ChatUseCase } from '@/application/use-cases/chat.use-case'
 import { initSSE, sendSSE } from '@/presentation/http/helpers/sse.helpers'
 import { AuthTokenToUserMapper } from '@/mappers/auth-token-to-user.mapper'
-import { ChatRequestSchema } from '@/dtos/chat-request.dto'
+import { ChatRequestDTO, ChatRequestSchema } from '@/dtos/chat-request.dto'
 import { z } from 'zod'
+import { ChatUseCase } from '@/application/use-cases/chat.use-case'
+import { GetChatHistoryUseCase } from '@/application/use-cases/get-chat-history.use-case'
+import { GetUserSessionsUseCase } from '@/application/use-cases/get-user-sessions.use-case'
 
 export class ChatController {
-    constructor(private chatUseCase: ChatUseCase) {}
+    
+    constructor(
+        private chatUseCase: ChatUseCase, 
+        private getChatHistoryUseCase: GetChatHistoryUseCase,
+        private getUserSessionsUseCase: GetUserSessionsUseCase
+    ) {}
+
+    async getHistory(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const { sessionId } = request.params as { sessionId: string }
+            const userDomain = AuthTokenToUserMapper.toDomain(request.user)
+            const messages = await this.getChatHistoryUseCase.execute(sessionId, userDomain.id)
+            return reply.send(messages)
+        } catch (error) {
+            return reply.code(403).send({ error: 'FORBIDDEN', message: (error as Error).message })
+        }
+    }
+
+    async getSessions(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const userDomain = AuthTokenToUserMapper.toDomain(request.user)
+            const sessions = await this.getUserSessionsUseCase.execute(userDomain.id)
+            return reply.send(sessions)
+        } catch (error) {
+            console.log("ERROR======================================>", error)
+            return reply.code(500).send({ error: 'INTERNAL_ERROR' })
+        }
+    }
 
     async handleChat(request: FastifyRequest, reply: FastifyReply) {
         let isClosed = false
 
         try {
-            // Utilizziamo un mapper per essere indipendeti dal formato del token e orrtenere un oggetto User di dominio già pronto. Il controller non sa come funziona il token, delega al mapper.
             const userDomain = AuthTokenToUserMapper.toDomain(request.user)
 
-            // Validiamo il dato: un messsaggio di almeno 1 carattere è obbligatorio. 
-            // sessionId() è opzionale, se presente deve essere una UUID.
-            // user deve essere un'istanza di User (già garantita dal mapper).
-            const validatedData = ChatRequestSchema.parse({
+            /**
+             * @note
+             * Validiamo il dato: un messsaggio di almeno 1 carattere è obbligatorio. 
+             * sessionId() è opzionale, se presente deve essere una UUID.
+             * user deve essere un'istanza di User (già garantita dal mapper).
+             * 
+             * Si noti che a questo livello avvendono 3 cose: 
+             * 1. Controllo dei tipi
+             * 2. Controllo dei vincoli
+             * 3. Sanificazione ( rimozione di eventuali campi extra non definiti nello schema )
+             * 
+             */
+
+            const validatedData:ChatRequestDTO = ChatRequestSchema.parse({
                 ...(request.body as object),
                 user: userDomain
             })
 
-            // Inizializziamo SSE ( Server Side Events)solo dopo che la validazione è passata
+            // Inizializziamo SSE ( Server Side Events ) solo dopo che la validazione è passata
             initSSE(reply)
 
             // Gestione chiusura connessione
@@ -32,8 +70,19 @@ export class ChatController {
                 request.log.info(`Client disconnected from session: ${validatedData.sessionId}`)
             })
 
-            // Il UseCase ora riceve un contratto solido (il DTO).
+            // Il caso d'uso riceve il DTO validato. 
             // Restituisce lo stream e la sessionId (che potrebbe essere stata generata nuova)
+            
+            // VALIDATED DTO ====>  { 
+            //      message: 'ciao come stai?', 
+            //      user: User { 
+            //          id: 'ca61c706-ee8e-49fb-8601-5aaa5c45cda7',
+            //          email: 'stella.rubia@mailinator.com', 
+            //          groups: [ '/Sede', '/Sede/Sistemi Informativi' ],      
+            //          name: 'Stella Rubia'     
+            //    } 
+            // }
+
             const { stream, sessionId } = await this.chatUseCase.execute(validatedData)
 
             // Comunichiamo subito la sessione al client (fondamentale per il frontend)

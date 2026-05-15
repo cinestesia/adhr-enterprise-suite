@@ -1,5 +1,6 @@
-import { pgTable, uuid, text, jsonb, timestamp, customType } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, jsonb, timestamp, customType, index, integer} from 'drizzle-orm/pg-core'
 
+// se passiamo a OpenAI (text-embedding-3-small), si cambia a 1536.
 const EMBEDDING_DIM = 768
 
 const vector = customType<{ data: number[] }>({
@@ -12,12 +13,14 @@ const vector = customType<{ data: number[] }>({
 export const documents = pgTable('documents', {
     id: uuid().defaultRandom().primaryKey(),
     fileName: text('file_name').notNull(),
-    externalId: text('external_id'), // ID utile se i file arrivano da sistemi esterni come SharePoint
+    externalId: text('external_id'),
     department: text('department').notNull(),
     mimeType: text('mime_type'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
+}, (table) => [
+    index('dept_idx').on(table.department),
+])
 
 /**
  * Tabella dei chunk  ( I "Figli" del "Padre" con i relativi vettori )
@@ -72,20 +75,33 @@ export const documentChunks = pgTable('documents_chunks', {
  */
 
 export const chatSessions = pgTable('chat_sessions', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').notNull(), // Id utente dal tuo sistema auth
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id').notNull(), 
     title: text('title').default('Nuova Conversazione'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 export const chatMessages = pgTable('chat_messages', {
     id: uuid('id').primaryKey().defaultRandom(),
-    sessionId: uuid('session_id').references(() => chatSessions.id, {
+    
+    sessionId: uuid('session_id').references( () => chatSessions.id, {
         onDelete: 'cascade',
     }),
+    
     role: text('role', { enum: ['system', 'user', 'assistant'] }).notNull(),
     content: text('content').notNull(),
     // Salviamo anche i metadati del RAG se vogliamo fare debug dopo
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// NUOVA: Tabella per i feedback degli utenti
+export const chatFeedbacks = pgTable('chat_feedbacks', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    messageId: uuid('message_id').references(() => chatMessages.id, { onDelete: 'cascade' }).notNull(),
+    rating: integer('rating').notNull(), // 1 👍, -1 👎
+    comment: text('comment'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('msg_feedback_idx').on(table.messageId),
+])

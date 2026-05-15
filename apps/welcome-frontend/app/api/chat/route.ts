@@ -1,104 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt' // Assumendo che tu usi next-auth
+import { getToken } from 'next-auth/jwt'
+import { Agent, request as undiciRequest } from 'undici'; // Alias per evitare conflitti
 
-export async function POST(request: NextRequest) {
+const timeoutAgent = new Agent({
+  headersTimeout: 6000000, // 100 minuti
+  bodyTimeout: 6000000,
+  connectTimeout: 600000 
+});
+
+export async function POST(req: NextRequest) { // Cambiato in 'req'
     try {
-
-        /** 
-         * @note
-         * Recuperiamo il token dalla sessione di Next.js (lato server)
-         * il token viene recuperato dal cookie della richiesta e verificato 
-         * tramite next-auth
-         * 
-         * L' accessToken e l' idToken non sono inclusi automaticamente 
-         * nell'oggetto ritornato da getToken() a meno che non siano stati 
-         * esplicitamente salvati nel JWT durante la fase di login.
-         * 
-         * l'accessToken è fondamentale per autenticare la richiesta al backend, mentre l'idToken 
-         * è più utile per il logout (per invalidare la sessione lato Keycloak).
-         * 
-         * l'idToken contiene le informazioni sull'identità dell'utente (nome, email, ecc.)
-         * e per esempio è fondamentale per il logout. 
-         * 
-         */
-        const contentType = request.headers.get('content-type')
+        const contentType = req.headers.get('content-type')
         
         if (!contentType?.includes('application/json')) {
             return NextResponse.json({ error: 'Invalid Content-Type' }, { status: 400 })
         }
         
-        
-        const token = await getToken({ req: request })
+        const token = await getToken({ 
+            req,
+            secret: process.env.AUTH_SECRET, 
+        })
 
         if (!token || !token.accessToken) {
-            return new Response(JSON.stringify({ error: 'Non autorizzato' }), {
-                status: 401,
-                headers: { 'Content-Type': 'application/json' },
-            })
+            return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
         }
 
-        // Validazione minima del body.
-        let body; 
-
+        let jsonBody; 
         try {
-            body = await request.json()
+            jsonBody = await req.json()
         } catch (e) {
             return NextResponse.json({ error: 'Body JSON non valido' }, { status: 400 })
         }
 
         const backendUrl = process.env.API_BACKEND_URL || 'http://localhost:3002'
-
-        if (!backendUrl) {
-            console.error("Missing API_BACKEND_URL env var")
-            return NextResponse.json({ error: 'Configurazione server errata' }, { status: 500 })
-        }
-
         const abortController = new AbortController()
-        const timeoutId = setTimeout(() => abortController.abort(), 60000) // Timeout di sicurezza 60s 
+        
+        // Timeout di sicurezza sincronizzato con l'agent (10 minuti)
+        const timeoutId = setTimeout(() => abortController.abort(), 600000)
 
-
-        const response = await fetch(`${backendUrl}/api/v1/chat`, {
+        // Al primo invio non c'è sessionId : {"message":"ciao"}
+        // Usiamo undiciRequest per supportare correttamente il dispatcher
+        const { body, statusCode, headers: responseHeaders } = await undiciRequest(`${backendUrl}/api/v1/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Passiamo l'AccessToken che il backend verificherà tramite Keycloak
                 'Authorization': `Bearer ${token.accessToken}`,
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(jsonBody),
+            dispatcher: timeoutAgent,
             signal: abortController.signal,
-        })
+        });
 
         clearTimeout(timeoutId)
 
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Errore sconosciuto')
-            console.error(`Backend Error (${response.status}):`, errorText)
-            return new Response(`Errore backend chat service: ${errorText}`, {
-                status: response.status,
-            })
+        // Verifica dello status tramite il codice restituito da undici
+        if (statusCode < 200 || statusCode >= 300) {
+            console.error(`Backend Error (${statusCode})`);
+            return new Response(`Errore backend chat service`, { status: statusCode });
         }
 
-        if (!response.body) {
+        if (!body) {
             return NextResponse.json({ error: 'Nessuna risposta dal backend' }, { status: 500 })
         }
 
-        // 3. Ritorno dello stream al client
-        return new Response(response.body, {
+        /**
+         * @note Bridge dello Stream
+         * 'body' restituito da undici è un ReadableStream compatibile con il costruttore Response.
+         */
+        return new Response(body as any, {
             headers: {
                 'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache no-transform',
+                'Cache-Control': 'no-cache, no-transform',
                 'Connection': 'keep-alive',
-                
-                /**
-                 * @note
-                 * Se stai usando NGINX come reverse proxy, è fondamentale disabilitare il buffering per questa route.
-                 * Altrimenti, NGINX aspetterà che tutto lo stream sia completo prima di inviarlo al client, vanificando lo streaming.
-                 */
-                'X-Accel-Buffering': 'no'
+                'X-Accel-Buffering': 'no' // Fondamentale per NGINX
             },
         })
+
     } catch (error: any) {
+        if (error.name === 'AbortError') {
+            return new Response(JSON.stringify({ error: 'Il server ha impiegato troppo tempo a rispondere (Timeout)' }), { status: 504 })
+        }
         console.error('Errore nella Route API di Next.js:', error)
         return new Response(JSON.stringify({ error: 'Errore interno' }), { status: 500 })
     }
-}
+}       

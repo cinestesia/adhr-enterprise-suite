@@ -15,7 +15,7 @@ export class PgVectorAdapter implements IVectorDbPort {
 
     async addDocument(chunks: Document[]): Promise<void> {
         const fileName = chunks[0].metadata.source
-        const department = chunks[0].metadata.department || 'General'
+        const department = chunks[0].metadata.department  // => rimosso ora il dipartimento è obbligatorio|| 'General'
 
         await this.db.transaction(async (tx) => {
             // 1. Inserimento record padre

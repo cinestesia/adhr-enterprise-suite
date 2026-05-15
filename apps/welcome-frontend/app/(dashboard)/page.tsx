@@ -2,7 +2,7 @@
 import { LauncherAppCard } from '@/components/LauncherAppCard'
 import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getLauncherApps } from '@/lib/get-launcher-apps'
 import { CheckCircle2 } from 'lucide-react'
 

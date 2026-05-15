@@ -10,7 +10,8 @@ declare module 'fastify' {
             AI_BASE_URL: string
             AI_MODEL_NAME: string
             CORS_ORIGIN: string
-        }
+        },
+        authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
     }
 
     interface FastifyInstance {

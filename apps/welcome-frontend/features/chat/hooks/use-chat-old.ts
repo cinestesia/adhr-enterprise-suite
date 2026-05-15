@@ -12,7 +12,7 @@ export interface Message {
  * (es. il componente ChatInput) 
  * 
  */
-export function useChat(accessToken?: string) { // <--- Riceviamo il token (es. da NextAuth o Keycloak)
+export function useChat(accessToken?: string, ) { 
     const [error, setError] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([
         { role: 'assistant', content: "Ciao! Sono l'assistente AI di ADHR Group..." },
@@ -25,7 +25,7 @@ export function useChat(accessToken?: string) { // <--- Riceviamo il token (es. 
 
     const sendMessage = useCallback(
         async (content: string) => {
-            if (!content.trim() || !accessToken) return // Non partiamo senza token
+            // if (!content.trim() || !accessToken) return // Non partiamo senza token
 
             const usrMsg: Message = { role: 'user', content }
             setMessages((prev) => [...prev, usrMsg])
@@ -44,7 +44,7 @@ export function useChat(accessToken?: string) { // <--- Riceviamo il token (es. 
                  * 
                  * 
                  */
-                const response = await fetch('api/chat', {
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -73,9 +73,14 @@ export function useChat(accessToken?: string) { // <--- Riceviamo il token (es. 
                     if (done) break
                     
                     const chunk = decoder.decode(value, { stream: true })
+                    
+                    /**
+                     * le linee arrivano in questo modo:
+                     * ["data: {\"type\":\"token\",\"content\":\"!\"}",""]
+                     */
                     const lines = (leftover + chunk).split('\n')
                     leftover = lines.pop() || ''
-
+                    
                     for (const line of lines) {
                         const trimmedLine = line.trim()
                         if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue

@@ -1,5 +1,5 @@
-import { Message } from '@/domain/models/chat-to-be-deleted'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
+import { ChatMessage } from '../models/chat-message.model'
 
 export interface IChatPort {
     
@@ -10,7 +10,7 @@ export interface IChatPort {
      *
      */
 
-    chat(message: string, history: Message[]): Promise<IterableReadableStream<string>>
+    chat(message: string, history: ChatMessage[]): Promise<IterableReadableStream<string>>
 
     // risposte "secche" (es. per il titolo)
     predict(prompt: string): Promise<string>

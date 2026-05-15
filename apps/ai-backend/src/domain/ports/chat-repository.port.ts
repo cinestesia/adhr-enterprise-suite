@@ -1,19 +1,15 @@
-import { Message } from '@/domain/models/chat-to-be-deleted'
 import { ChatMessage } from '../models/chat-message.model';
+import { ChatSession } from '../models/chat-session.model';
 
 export interface IChatRepository {
-    // Crea una nuova sessione e restituisce l'ID
-    createSession(id: string, userId: string, title?: string): Promise<string>
-
-    // Salva un singolo messaggio nel database
-    saveMessage(sessionId: string, message: Message): Promise<void>
-    
-    getMessagesBySessionId(sessionId: string, limit?: number): Promise<ChatMessage[]>;
-    
-    // Recupera tutte le sessioni di un utente (per la sidebar del frontend)
-    getSessionsByUserId(userId: string): Promise<any[]>
-
+    // session 
+    createSession(session: ChatSession): Promise<string>
+    getSessionById(id: string): Promise<ChatSession | null>    
+    getSessionsByUserId(userId: string): Promise<ChatSession[]>
     checkSessionOwnership(sessionId: string, userId: string): Promise<boolean>
-
-    updateSessionTitle(sessionId: string, title: string): Promise<void>
+    updateSession(session: ChatSession): Promise<void>
+    // messages
+    getMessagesBySessionId(sessionId: string, limit?: number): Promise<ChatMessage[]>;
+    saveMessage(sessionId: string, message: ChatMessage): Promise<void>
+    
 }

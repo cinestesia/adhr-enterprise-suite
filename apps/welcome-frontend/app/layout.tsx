@@ -8,6 +8,7 @@ import { Geist, Geist_Mono, Special_Elite } from 'next/font/google'
 import SessionWrapper from '@/components/SessionWrapper'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
+import Providers from '@/components/Providers'
 
 /**
  * Caratteri tipoografici (font) interessanti per l'app. Creiamo il carattere e lo esportiamo
@@ -52,11 +53,10 @@ export default function RootLayoutPage({
       >
         {/* <p className='font-geist'>ciao</p> */}
         {/* <p className='font-special'> font-special: emula una macchina da scrivere </p> */}
+      <Providers>
+        {children}
+      </Providers>
 
-        <SessionWrapper>
-          {/* Il TooltipProvider serve a definire il comportamente del tooltip  */}
-          <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
-        </SessionWrapper>
       </body>
     </html>
   )

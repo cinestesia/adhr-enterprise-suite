@@ -7,7 +7,7 @@ node_modules
 /.next
 /out
 /docs
-
+uploads
 # --- Turborepo ---
 .turbo
 

@@ -1,59 +1,94 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fastifyJwt from '@fastify/jwt'
 import jwksRsa from 'jwks-rsa'
+import fp from 'fastify-plugin'
 
-const keycloakIssuer =
-    process.env.KEYCLOAK_ISSUER || 'http://auth.4.232.3.98.nip.io/realms/internal-adhr'
+/**
+ * @note
+ * Utilizziamo fastify-plugin per "rompere" l'incapsulamento di Fastify.
+ * Senza questo, le decorazioni come .authenticate resterebbero confinate 
+ * all'interno di questo plugin e non sarebbero visibili nelle rotte.
+ */
+export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance) {
+    const keycloakIssuer =
+        process.env.KEYCLOAK_ISSUER || 'http://auth.4.232.3.98.nip.io/realms/internal-adhr'
 
-// JWKS client (creato UNA volta sola)
-const client = jwksRsa({
-    jwksUri: `${keycloakIssuer}/protocol/openid-connect/certs`,
-    cache: true,
-    cacheMaxEntries: 5, // memorizza fino a 5 chiavi in cache
+    // JWKS client per recuperare le chiavi pubbliche di Keycloak
+    const client = jwksRsa({
+        jwksUri: `${keycloakIssuer}/protocol/openid-connect/certs`,
+        cache: true,
+        cacheMaxEntries: 5,
+        cacheMaxAge: 600000, // 10 minuti
+    })
+
     
-    // ogni chiave (kid) viene salvata in cache, se arriva un tken con lo stesso kid entro 10 minuti usa lòa cache
-    // altrimenti rifà una richiesta all'endpoint JWKS per recuperare la chiave aggiornata 
-    // (utile in caso di rotazione delle chiavi)
-    cacheMaxAge: 600000, // 10 minuti in ms
-})
+        // secret: async (_request: FastifyRequest, token: string | object) => {
+        //     console.log("TOKKKKEN", token)
+        //     if (typeof token !== 'string') {
+        //         throw new Error('Token JWT non valido (non è una stringa)')
+        //     }
 
-export async function authPlugin(fastify: FastifyInstance) {
+        //     const decoded = fastify.jwt.decode(token, { complete: true }) as {
+        //         header?: { kid?: string }
+        //     } | null
+
+        //     const kid = decoded?.header?.kid
+        //     if (!kid) {
+        //         throw new Error('Token JWT senza kid')
+        //     }
+
+        //     const key = await client.getSigningKey(kid)
+        //     return key.getPublicKey()
+        // },
+
+    // Registrazione del plugin JWT
     await fastify.register(fastifyJwt, {
-        secret: async (_request: FastifyRequest, token: string | object) => {
-            if (typeof token !== 'string') {
-                throw new Error('Token JWT non valido (non è una stringa)')
+        secret: async (request: FastifyRequest, tokenOrPayload: string | object) => {
+            // 1. Recuperiamo il token crudo dall'header Authorization
+            // perché è lì che risiede il 'kid' nell'header del JWT
+            console.log("TOKEN OR PAYLOAD", tokenOrPayload )
+            const authHeader = request.headers.authorization;
+            const rawToken = authHeader?.split(' ')[1];
+
+            if (!rawToken) {
+                throw new Error('Manca il token nella richiesta');
             }
 
-            const decoded = fastify.jwt.decode(token, { complete: true }) as {
+            // 2. Decodifichiamo l'header per trovare il kid
+            const decoded = fastify.jwt.decode(rawToken, { complete: true }) as {
                 header?: { kid?: string }
-            } | null
+            } | null;
 
-            const kid = decoded?.header?.kid
+            console.log("DECODED JWT HEADER", decoded?.header)
+            const kid = decoded?.header?.kid;
+            
             if (!kid) {
-                throw new Error('Token JWT senza kid')
+                throw new Error('Token JWT senza kid nell’header');
             }
 
-            const key = await client.getSigningKey(kid)
-            return key.getPublicKey()
+            // 3. Chiediamo a Keycloak la chiave pubblica per questo specifico kid
+            const key = await client.getSigningKey(kid);
+            return key.getPublicKey();
         },
-
         verify: {
-            // il jwt ha alcuni campi come exp, nbf, iat con clocktolerance di 30 secondi 
-            // per gestire piccoli disallineamenti tra server e client
-            // exp = 10:00:00 del token, se il server è a 10:00:25 considererà 
-            // ancora valido il token (tolleranza di 30 secondi)
-            clockTolerance: 30,
+            clockTolerance: 30, // Tolleranza per disallineamento orari server
         } as any
     })
 
+    /**
+     * Decoratore .authenticate
+     * Utilizzabile nelle rotte come hook preHandler o onRequest:
+     * { onRequest: [fastify.authenticate] }
+     */
     fastify.decorate(
         'authenticate',
         async (request: FastifyRequest, reply: FastifyReply) => {
             try {
+                // Esegue la verifica del token presente nell'header Authorization
                 await request.jwtVerify()
 
+                // Validazione extra dell'Issuer per sicurezza
                 const payload = request.user as { iss?: string }
-
                 if (payload.iss !== keycloakIssuer) {
                     return reply.code(401).send({
                         error: 'UNAUTHORIZED',
@@ -61,6 +96,7 @@ export async function authPlugin(fastify: FastifyInstance) {
                     })
                 }
             } catch (err) {
+                fastify.log.error(err)
                 return reply.code(401).send({
                     error: 'UNAUTHORIZED',
                     message: 'Token non valido o scaduto',
@@ -68,4 +104,4 @@ export async function authPlugin(fastify: FastifyInstance) {
             }
         }
     )
-}
+})

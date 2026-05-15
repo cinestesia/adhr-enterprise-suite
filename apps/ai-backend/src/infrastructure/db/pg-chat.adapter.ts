@@ -1,9 +1,9 @@
 import { IChatRepository } from '@/domain/ports/chat-repository.port'
-import { Message } from '@/domain/models/chat-to-be-deleted'
 import { DbInstance } from './index'
 import { chatSessions, chatMessages } from './schema'
 import { eq, desc, and } from 'drizzle-orm'
 import { ChatMessage, MessageRole } from '@/domain/models/chat-message.model'
+import { ChatSession } from '@/domain/models/chat-session.model'
 
 /**
  * @note
@@ -21,16 +21,54 @@ export class PgChatAdapter implements IChatRepository {
     
     constructor(private db: DbInstance) {}
 
-    async createSession(id: string, userId: string, title?: string): Promise<string> {
-        const [session] = await this.db
+    /**
+     * @note Riceve l'entità ChatSession completa. 
+     * Questo garantisce che la sessione nasca già con userId e regole di business valide.
+     */
+    async createSession(session: ChatSession): Promise<string> {
+        const [inserted] = await this.db
             .insert(chatSessions)
             .values({ 
-                id, // Usiamo l'UUID generato dall'Application layer
-                userId, 
-                title: title || 'Nuova Conversazione' 
+                id: session.id, 
+                userId: session.userId, 
+                title: session.title,
+                createdAt: session.createdAt
             })
             .returning({ id: chatSessions.id })
-        return session.id
+        
+        return inserted.id
+    }
+
+    async getSessionById(id: string): Promise<ChatSession | null> {
+        const [row] = await this.db
+            .select()
+            .from(chatSessions)
+            .where(eq(chatSessions.id, id))
+            .limit(1);
+
+        if (!row) return null;
+
+        return new ChatSession(
+            row.id,
+            row.userId,
+            row.createdAt, // Terzo parametro: Date
+            row.title ?? 'Nuova Conversazione' // Quarto parametro: string
+        );
+    }
+
+    async getSessionsByUserId(userId: string): Promise<ChatSession[]> {
+        const rows = await this.db
+            .select()
+            .from(chatSessions)
+            .where(eq(chatSessions.userId, userId))
+            .orderBy(desc(chatSessions.createdAt))
+
+        return rows.map(row => new ChatSession(
+            row.id,
+            row.userId,
+            row.createdAt,
+            row.title ?? 'Nuova Conversazione',
+        ))
     }
 
     async checkSessionOwnership(sessionId: string, userId: string): Promise<boolean> {
@@ -48,15 +86,27 @@ export class PgChatAdapter implements IChatRepository {
         return !!session // Ritorna true se esiste, false altrimenti
     }
 
-    // Aggiungiamo un metodo per aggiornare il titolo in un secondo momento
-    async updateSessionTitle(sessionId: string, title: string): Promise<void> {
+    async updateSession(session: ChatSession): Promise<void> {
         await this.db
             .update(chatSessions)
-            .set({ title })
-            .where(eq(chatSessions.id, sessionId))
+            .set({ 
+                title: session.title,
+                // Qui potrai aggiungere altri campi man mano che l'entità ChatSession cresce
+                // es: status: session.status,
+                // es: metadata: session.metadata
+            })
+            .where(eq(chatSessions.id, session.id));
     }
 
-    async saveMessage(sessionId: string, message: Message): Promise<void> {
+    // Aggiungiamo un metodo per aggiornare il titolo in un secondo momento
+    // async updateSessionTitle(sessionId: string, title: string): Promise<void> {
+    //     await this.db
+    //         .update(chatSessions)
+    //         .set({ title })
+    //         .where(eq(chatSessions.id, sessionId))
+    // }
+
+    async saveMessage(sessionId: string, message: ChatMessage): Promise<void> {
         await this.db.insert(chatMessages).values({
             sessionId,
             role: message.role,
@@ -80,11 +130,5 @@ export class PgChatAdapter implements IChatRepository {
         ));
     }
 
-    async getSessionsByUserId(userId: string): Promise<any[]> {
-        return await this.db
-            .select()
-            .from(chatSessions)
-            .where(eq(chatSessions.userId, userId))
-            .orderBy(desc(chatSessions.createdAt))
-    }
+
 }

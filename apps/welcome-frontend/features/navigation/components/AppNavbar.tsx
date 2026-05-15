@@ -17,9 +17,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { getRouteMetadata } from '@/lib/get-launcher-apps'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Button } from './ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export function AppNavbar() {
   const pathname = usePathname()

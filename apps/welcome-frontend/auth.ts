@@ -18,7 +18,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         /**
          * @note
-         * Questa callbacke gira solo lato server, ogni volta che viene creato o aggiornato un JWT.
+         * Questa callback gira solo lato server, ogni volta che viene creato o aggiornato un JWT.
          * Decide cosa scrivere dentro il cookie JWE (JSON Web Encryption) che NextAuth salva nel 
          * browser dell'utente.
          * 
@@ -69,6 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         */
         async session({ session, token }) {
             session.idToken = token.idToken as string 
+            session.accessToken = token.accessToken as string
             session.user.groups = token.groups
             session.user.roles = token.roles
             return session

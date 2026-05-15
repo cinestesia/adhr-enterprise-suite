@@ -21,7 +21,7 @@
  */
 
 import { IChatPort } from '@/domain/ports/chat.port'
-import { Message } from '@/domain/models/chat-to-be-deleted'
+import { ChatMessage } from '@/domain/models/chat-message.model'
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages'
 import { StringOutputParser } from '@langchain/core/output_parsers'
@@ -64,6 +64,7 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
 
             configuration: {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:11434/v1',
+                timeout: 600000, // 10 minuti in millisecondi
             },
 
             model: process.env.AI_MODEL_NAME || 'llama3.1',
@@ -85,9 +86,32 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
         })
     }
 
+
+    /**
+     * [
+     * ChatMessage {
+     *      role: 'system',
+     *      content: " ... "   
+     *      createdAt: 2026-05-13T13:32:31.344Z
+     * },
+     * 
+     * ChatMessage {
+     *      role: 'user',
+     *      content: 'ciao come stai?',
+     *      createdAt: 2026-05-13T13:24:39.396Z
+     * },
+     * ChatMessage {
+     *      role: 'assistant',
+     *      content: 'Ciao! Sono un assistente virtuale ufficiale di ADHR Group per il dipartimento Sistemi Informativi, quindi sono qui per aiutarti con le tue domande e risolvere eventuali problemi relativi a InRecruiting e CARM. Come posso aiutarti oggi?',
+     *      createdAt: 2026-05-13T13:31:45.754Z
+     * }
+     * ]
+     */
+
+
     async chat(
         message: string, // es. ciao come va?
-        history: Message[] // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" },{ role: "system", content: "Utilizza esclusivamente il seguente contesto aziendale per rispondere alla domanda dell'utente. Se la risposta non è presente, ammetti di non saperlo. CONTESTO: [estratto dei documenti]" }]
+        history: ChatMessage[] // es. [ { role: "assistant", content: "Ciao! Sono l'assitente AI Aziendale. Come posso aiutarti?" },{ role: "system", content: "Utilizza esclusivamente il seguente contesto aziendale per rispondere alla domanda dell'utente. Se la risposta non è presente, ammetti di non saperlo. CONTESTO: [estratto dei documenti]" }]
     ): Promise<IterableReadableStream<string>> {
         const langChainMessages = history.map((msg) => {
             if (msg.role === 'user') {
