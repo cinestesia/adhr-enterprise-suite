@@ -12,7 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             //     params: {
             //         scope: "openid profile email phone", // aggiungi qui
             //     }
-            // }
+            // } 
         }),
     ],
     callbacks: {

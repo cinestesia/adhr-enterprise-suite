@@ -1,5 +1,5 @@
 # STAGE 1: Pruning - Riduce il monorepo ai soli file necessari per il frontend
-FROM node:22-alpine AS pruner
+FROM node:20-alpine AS pruner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install -g turbo
@@ -9,7 +9,7 @@ COPY . .
 RUN turbo prune @adhr/welcome-frontend --docker
 
 # STAGE 2: Installer - Installa le dipendenze
-FROM node:22-alpine AS installer
+FROM node:20-alpine AS installer
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN npm install -g pnpm@10.30.1
 RUN pnpm install --frozen-lockfile
 
 # STAGE 3: Builder - Compila l'applicazione
-FROM node:22-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY --from=pruner /app/out/full/ .
@@ -39,7 +39,7 @@ RUN npm install -g pnpm@10.30.1
 RUN pnpm turbo build --filter=@adhr/welcome-frontend
 
 # STAGE 4: Runner - Immagine finale super leggera
-FROM node:22-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Creiamo un utente non-root per sicurezza
