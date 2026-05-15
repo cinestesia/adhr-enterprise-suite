@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // } 
         }),
     ],
-    callbacks: {
+    callbacks: { 
         /**
          * @note
          * Questa callback gira solo lato server, ogni volta che viene creato o aggiornato un JWT.
