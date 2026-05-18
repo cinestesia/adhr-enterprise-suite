@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) { // Cambiato in 'req'
         if (!contentType?.includes('application/json')) {
             return NextResponse.json({ error: 'Invalid Content-Type' }, { status: 400 })
         }
-        
+         
         const token = await getToken({ 
             req,
             secret: process.env.AUTH_SECRET, 
