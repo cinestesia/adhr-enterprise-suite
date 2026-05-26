@@ -2,7 +2,6 @@ import { IterableReadableStream } from '@langchain/core/utils/stream'
 import { ChatMessage } from '../models/chat-message.model'
 
 export interface IChatPort {
-    
     /**
      * Invia un messaggio all'AI e ottiene una risposta.
      * @param message Il messaggio dell'utente

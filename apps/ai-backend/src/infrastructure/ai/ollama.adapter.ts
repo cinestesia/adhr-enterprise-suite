@@ -34,27 +34,27 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
 
     async predict(prompt: string): Promise<string> {
         try {
-            const response = await this.model.invoke(prompt);
+            const response = await this.model.invoke(prompt)
 
             // 1. Se il contenuto è già una stringa, lo restituiamo pulito
             if (typeof response.content === 'string') {
-                return response.content;
+                return response.content
             }
 
             // 2. Se è un array di blocchi (ContentBlock | Text), estraiamo solo le parti di testo
             if (Array.isArray(response.content)) {
                 return response.content
                     .map((block) => {
-                        if ("text" in block) return block.text; // Per i blocchi di testo standard
-                        return ""; // Ignoriamo immagini o altri tipi di blocchi per il titolo
+                        if ('text' in block) return block.text // Per i blocchi di testo standard
+                        return '' // Ignoriamo immagini o altri tipi di blocchi per il titolo
                     })
-                    .join("");
+                    .join('')
             }
 
-            return "Nuova Conversazione"; // Fallback se il tipo è inaspettato
+            return 'Nuova Conversazione' // Fallback se il tipo è inaspettato
         } catch (error) {
-            console.error("Errore durante predict:", error);
-            return "Nuova Conversazione";
+            console.error('Errore durante predict:', error)
+            return 'Nuova Conversazione'
         }
     }
 
@@ -86,15 +86,14 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
         })
     }
 
-
     /**
      * [
      * ChatMessage {
      *      role: 'system',
-     *      content: " ... "   
+     *      content: " ... "
      *      createdAt: 2026-05-13T13:32:31.344Z
      * },
-     * 
+     *
      * ChatMessage {
      *      role: 'user',
      *      content: 'ciao come stai?',
@@ -107,7 +106,6 @@ export class OllamaAdapter implements IChatPort, IEmbeddingsPort {
      * }
      * ]
      */
-
 
     async chat(
         message: string, // es. ciao come va?

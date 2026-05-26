@@ -3,40 +3,39 @@ import { getToken } from 'next-auth/jwt' // Assumendo che tu usi next-auth
 
 export async function POST(request: NextRequest) {
     try {
-
-        /** 
+        /**
          * @note
          * Recuperiamo il token dalla sessione di Next.js (lato server)
-         * il token viene recuperato dal cookie della richiesta e verificato 
+         * il token viene recuperato dal cookie della richiesta e verificato
          * tramite next-auth
-         * 
-         * L' accessToken e l' idToken non sono inclusi automaticamente 
-         * nell'oggetto ritornato da getToken() a meno che non siano stati 
+         *
+         * L' accessToken e l' idToken non sono inclusi automaticamente
+         * nell'oggetto ritornato da getToken() a meno che non siano stati
          * esplicitamente salvati nel JWT durante la fase di login.
-         * 
-         * l'accessToken è fondamentale per autenticare la richiesta al backend, mentre l'idToken 
+         *
+         * l'accessToken è fondamentale per autenticare la richiesta al backend, mentre l'idToken
          * è più utile per il logout (per invalidare la sessione lato Keycloak).
-         * 
+         *
          * l'idToken contiene le informazioni sull'identità dell'utente (nome, email, ecc.)
-         * e per esempio è fondamentale per il logout. 
-         * 
+         * e per esempio è fondamentale per il logout.
+         *
          */
         const contentType = request.headers.get('content-type')
-        
+
         if (!contentType?.includes('application/json')) {
             return NextResponse.json({ error: 'Invalid Content-Type' }, { status: 400 })
         }
-        
+
         /**
          * @note
-         * NextAuth riceve il token da Keycloak, ma non lo lascia "nudo" nel browser dell'utente. 
+         * NextAuth riceve il token da Keycloak, ma non lo lascia "nudo" nel browser dell'utente.
          * Lo prende, lo impacchetta e lo scrive dentro un cookie criptato (o un JWT gestito da NextAuth).
-         * Qui dobbiamo passare il secret utilizzato da NextAuth per criptare il token. 
+         * Qui dobbiamo passare il secret utilizzato da NextAuth per criptare il token.
          */
-        const token = await getToken({ 
+        const token = await getToken({
             req: request,
-            secret: process.env.AUTH_SECRET, 
-         })
+            secret: process.env.AUTH_SECRET,
+        })
 
         if (!token || !token.accessToken) {
             return new Response(JSON.stringify({ error: 'Non autorizzato' }), {
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Validazione minima del body.
-        let body; 
+        let body
 
         try {
             body = await request.json()
@@ -57,19 +56,22 @@ export async function POST(request: NextRequest) {
         const backendUrl = process.env.API_BACKEND_URL || 'http://localhost:3002'
 
         if (!backendUrl) {
-            console.error("Missing API_BACKEND_URL env var")
-            return NextResponse.json({ error: 'Configurazione server errata' }, { status: 500 })
+            console.error('Missing API_BACKEND_URL env var')
+            return NextResponse.json(
+                { error: 'Configurazione server errata' },
+                { status: 500 }
+            )
         }
 
         const abortController = new AbortController()
-        const timeoutId = setTimeout(() => abortController.abort(), 6000000) // Timeout di sicurezza 60s 
+        const timeoutId = setTimeout(() => abortController.abort(), 6000000) // Timeout di sicurezza 60s
 
         const response = await fetch(`${backendUrl}/api/v1/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 // Passiamo l'AccessToken che il backend verificherà tramite Keycloak
-                'Authorization': `Bearer ${token.accessToken}`,
+                Authorization: `Bearer ${token.accessToken}`,
             },
             body: JSON.stringify(body),
             signal: abortController.signal,
@@ -86,7 +88,10 @@ export async function POST(request: NextRequest) {
         }
 
         if (!response.body) {
-            return NextResponse.json({ error: 'Nessuna risposta dal backend' }, { status: 500 })
+            return NextResponse.json(
+                { error: 'Nessuna risposta dal backend' },
+                { status: 500 }
+            )
         }
 
         // 3. Ritorno dello stream al client
@@ -94,14 +99,14 @@ export async function POST(request: NextRequest) {
             headers: {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache no-transform',
-                'Connection': 'keep-alive',
-                
+                Connection: 'keep-alive',
+
                 /**
                  * @note
                  * Se stai usando NGINX come reverse proxy, è fondamentale disabilitare il buffering per questa route.
                  * Altrimenti, NGINX aspetterà che tutto lo stream sia completo prima di inviarlo al client, vanificando lo streaming.
                  */
-                'X-Accel-Buffering': 'no'
+                'X-Accel-Buffering': 'no',
             },
         })
     } catch (error: any) {

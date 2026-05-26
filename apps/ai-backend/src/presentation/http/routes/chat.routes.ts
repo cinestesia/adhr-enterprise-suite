@@ -2,6 +2,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { BaseChatRequestSchema } from '@/dtos/chat-request.dto'
 import { z } from 'zod'
+import { ChatSessionsListResponseSchema } from '@/dtos/chat-sessions-response.dto'
 
 export async function chatRoutes(
     fastify: FastifyInstance,
@@ -10,13 +11,13 @@ export async function chatRoutes(
     // 1. POST - Streaming Chat (Esistente)
     fastify.post(
         '/chat',
-        { 
+        {
             onRequest: [fastify.authenticate],
             schema: {
                 description: 'Invia un messaggio in streaming',
                 tags: ['Chat'],
-                body: BaseChatRequestSchema
-            }
+                body: BaseChatRequestSchema,
+            },
         },
         fastify.chatController.handleChat.bind(fastify.chatController)
     )
@@ -30,9 +31,9 @@ export async function chatRoutes(
                 description: 'Recupera i messaggi di una specifica sessione',
                 tags: ['Chat'],
                 params: z.object({
-                    sessionId: z.string().uuid()
-                })
-            }
+                    sessionId: z.string().uuid(),
+                }),
+            },
         },
         fastify.chatController.getHistory.bind(fastify.chatController)
     )
@@ -43,9 +44,12 @@ export async function chatRoutes(
         {
             onRequest: [fastify.authenticate],
             schema: {
-                description: 'Recupera tutte le sessioni chat dell\'utente loggato',
-                tags: ['Chat']
-            }
+                description: "Recupera tutte le sessioni chat dell'utente loggato",
+                tags: ['Chat'],
+                response: {
+                    200: ChatSessionsListResponseSchema, // <--- fastify normalizza l'uscita
+                },
+            },
         },
         fastify.chatController.getSessions.bind(fastify.chatController)
     )

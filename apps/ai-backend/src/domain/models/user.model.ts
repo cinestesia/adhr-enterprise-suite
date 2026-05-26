@@ -7,13 +7,13 @@ export class User {
     ) {}
 
     get mainDepartment(): string {
-        if (this.groups.length === 0) return 'Generale';
+        if (this.groups.length === 0) return 'Generale'
         // Prendiamo l'ultimo segmento del gruppo
-        const lastGroup = this.groups[this.groups.length - 1];
-        return lastGroup.split('/').pop() || 'Generale';
+        const lastGroup = this.groups[this.groups.length - 1]
+        return lastGroup.split('/').pop() || 'Generale'
     }
 
     isAdmin(): boolean {
-        return this.groups.includes('/Admin');
+        return this.groups.includes('/Admin')
     }
 }

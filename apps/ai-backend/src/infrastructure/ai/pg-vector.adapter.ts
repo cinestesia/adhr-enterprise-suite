@@ -3,7 +3,7 @@ import { IVectorDbPort, VectorSearchResult } from '@/domain/ports/vector-db.port
 import { Document } from '@langchain/core/documents'
 import { DbInstance } from '@/infrastructure/db'
 import { documents, documentChunks } from '@/infrastructure/db/schema'
-import { sql, eq } from 'drizzle-orm'
+import { sql, eq, ilike, and } from 'drizzle-orm'
 
 export class PgVectorAdapter implements IVectorDbPort {
     constructor(
@@ -11,14 +11,11 @@ export class PgVectorAdapter implements IVectorDbPort {
         private db: DbInstance
     ) {}
 
-    // src/infrastructure/db/adapters/pgvector.adapter.ts
-
     async addDocument(chunks: Document[]): Promise<void> {
         const fileName = chunks[0].metadata.source
-        const department = chunks[0].metadata.department  // => rimosso ora il dipartimento è obbligatorio|| 'General'
+        const department = chunks[0].metadata.department
 
         await this.db.transaction(async (tx) => {
-            // 1. Inserimento record padre
             const [doc] = await tx
                 .insert(documents)
                 .values({
@@ -27,11 +24,9 @@ export class PgVectorAdapter implements IVectorDbPort {
                 })
                 .returning()
 
-            // 2. Generazione embeddings
             const contents = chunks.map((c) => c.pageContent)
             const vectors = await this.embeddings.embedDocuments(contents)
 
-            // 3. Preparazione chunk con formattazione VECTOR string
             const chunksToInsert = chunks.map((chunk, index) => {
                 // TRUCCO: Convertiamo l'array [0.1, 0.2] in "[0.1, 0.2]"
                 const vectorString = `[${vectors[index].join(',')}]`
@@ -39,12 +34,11 @@ export class PgVectorAdapter implements IVectorDbPort {
                 return {
                     documentId: doc.id,
                     content: chunk.pageContent,
-                    embedding: sql`${vectorString}::vector`, // Ora è una stringa valida per Postgres
+                    embedding: sql`${vectorString}::vector`,
                     metadata: chunk.metadata,
                 }
             })
 
-            // 4. Inserimento massivo
             await tx.insert(documentChunks).values(chunksToInsert)
         })
     }
@@ -61,7 +55,8 @@ export class PgVectorAdapter implements IVectorDbPort {
     async similaritySearch(
         query: string,
         limit: number = 4,
-        filters?: Record<string, any>
+        //filters?: Record<string, any>
+        filters?: { department?: string; year?: number; fileNameKeyword?: string }
     ): Promise<VectorSearchResult[]> {
         const queryEmbedding = await this.embeddings.embedQuery(query)
         const vectorString = `[${queryEmbedding.join(',')}]`
@@ -75,6 +70,27 @@ export class PgVectorAdapter implements IVectorDbPort {
             sql<number>`1 - (${documentChunks.embedding} <=> ${vectorString}::vector)`.as(
                 'similarity'
             )
+
+        // Costruiamo l'array di condizioni SQL in base a cosa l'LLM ha estratto
+        const conditions = []
+
+        // 1. Filtro Dipartimento (Sicurezza base)
+
+        if (filters?.department) {
+            conditions.push(eq(documents.department, filters.department))
+        }
+
+        // 2. Filtro Anno (Query Construction) - Estraiamo l'anno dalla data di creazione del documento
+        if (filters?.year) {
+            conditions.push(
+                eq(sql`EXTRACT(YEAR FROM ${documents.createdAt})`, filters.year)
+            )
+        }
+
+        // 3. Filtro Nome File (Query Construction) - Ricerca parziale case-insensitive
+        if (filters?.fileNameKeyword) {
+            conditions.push(ilike(documents.fileName, `%${filters.fileNameKeyword}%`))
+        }
 
         /**
          * SELECT content, metadata, 1 - (embedding <=> '[0.1, 0.5, -0.2]'::vector) AS similarity
@@ -91,15 +107,16 @@ export class PgVectorAdapter implements IVectorDbPort {
             })
             .from(documentChunks)
             .innerJoin(documents, eq(documentChunks.documentId, documents.id))
-            .where(
-                filters?.department
-                    ? eq(documents.department, filters.department) // <--- Filtro sul padre
-                    // ? eq(
-                    //       sql<string>`${documentChunks.metadata}->>'department'`,
-                    //       filters.department
-                    //   )
-                    : undefined
-            )
+            .where(conditions.length > 0 ? and(...conditions) : undefined)
+            // .where(
+            //     filters?.department
+            //         ? eq(documents.department, filters.department) // <--- Filtro sul padre
+            //         // ? eq(
+            //         //       sql<string>`${documentChunks.metadata}->>'department'`,
+            //         //       filters.department
+            //         //   )
+            //         : undefined
+            //)
             .orderBy(sql`${documentChunks.embedding} <=> ${vectorString}::vector`)
             .limit(limit)
 

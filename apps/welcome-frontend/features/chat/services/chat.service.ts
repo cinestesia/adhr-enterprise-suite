@@ -2,7 +2,6 @@
 import { Message } from '../hooks/use-chat-old'
 
 export const chatService = {
-    
     // Recupera lo storico
     getHistory: async (sessionId: string): Promise<Message[]> => {
         const res = await fetch(`/api/chat/history/${sessionId}`)
@@ -15,6 +14,5 @@ export const chatService = {
         const res = await fetch('/api/chat/sessions')
         if (!res.ok) throw new Error('Errore nel recupero sessioni')
         return res.json()
-    }
-
+    },
 }

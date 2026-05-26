@@ -2,24 +2,31 @@ import fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifyEnv from '@fastify/env'
 import multipart from '@fastify/multipart'
-import fastifySwagger from '@fastify/swagger';
-import fastifySwaggerUi from '@fastify/swagger-ui';
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUi from '@fastify/swagger-ui'
+import {
+    jsonSchemaTransform,
+    serializerCompiler,
+    validatorCompiler,
+} from 'fastify-type-provider-zod'
 
 import { diPlugin } from '@/presentation/http/plugins/di.plugin'
 import { chatRoutes } from '@/presentation/http/routes/chat.routes'
 import { healthRoutes } from '@/presentation/http/routes/health-routes'
 import { ingestRoutes } from './presentation/http/routes/ingest.routes'
 import { authPlugin } from './presentation/http/plugins/auth.plugin'
+import { recruitingRoutes } from './presentation/http/routes/recruiting.routes'
 
 /**
  * @note
  * Di default, Pino scrive i log in un formato JSON compresso
  * e bruttissimo da leggere per un essere umano, ma perfetto
  * per i computer (e per hub di log tipo Azure Kubernetes).
- * 
+ *
  */
 const app = fastify({
+    // connectionTimeout: 0,
+    // requestTimeout: 0,
     logger: {
         transport:
             process.env.NODE_ENV === 'development'
@@ -54,29 +61,29 @@ const options = {
 
 const start = async () => {
     try {
-        
         await app.register(fastifyEnv, options)
-        
+
         app.setValidatorCompiler(validatorCompiler)
         app.setSerializerCompiler(serializerCompiler)
         await app.register(authPlugin)
-        
+
         await app.register(fastifySwagger, {
             openapi: {
-                info: { 
-                    title: 'ADHR Group - AI Backend API', 
-                    description: 'Documentazione delle API per il sistema AI Interrecruiting/CARM',
-                    version: '1.0.0' 
+                info: {
+                    title: 'ADHR Group - AI Backend API',
+                    description:
+                        'Documentazione delle API per il sistema AI Interrecruiting/CARM',
+                    version: '1.0.0',
                 },
-                servers: [{ url: `http://localhost:${app.config.PORT}` }]
+                servers: [{ url: `http://localhost:${app.config.PORT}` }],
             },
             transform: jsonSchemaTransform, // La magia che trasforma Zod in Swagger
-        });
-        
+        })
+
         await app.register(fastifySwaggerUi, {
             routePrefix: '/docs', // La tua doc sarà qui
             uiConfig: { docExpansion: 'list', deepLinking: false },
-        });
+        })
 
         /**
          * @note
@@ -119,6 +126,7 @@ const start = async () => {
         await app.register(healthRoutes) // Omesso il porefix perchè, è solo /health
         await app.register(chatRoutes, { prefix: '/api/v1' })
         await app.register(ingestRoutes, { prefix: '/api/v1' })
+        await app.register(recruitingRoutes, { prefix: '/api/v1' })
 
         const port = Number(app.config.PORT)
         const host = app.config.HOST

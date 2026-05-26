@@ -1,4 +1,13 @@
-import { pgTable, uuid, text, jsonb, timestamp, customType, index, integer} from 'drizzle-orm/pg-core'
+import {
+    pgTable,
+    uuid,
+    text,
+    jsonb,
+    timestamp,
+    customType,
+    index,
+    integer,
+} from 'drizzle-orm/pg-core'
 
 // se passiamo a OpenAI (text-embedding-3-small), si cambia a 1536.
 const EMBEDDING_DIM = 768
@@ -10,17 +19,19 @@ const vector = customType<{ data: number[] }>({
 })
 
 // Tabelle documenti ( Il "Padre" )
-export const documents = pgTable('documents', {
-    id: uuid().defaultRandom().primaryKey(),
-    fileName: text('file_name').notNull(),
-    externalId: text('external_id'),
-    department: text('department').notNull(),
-    mimeType: text('mime_type'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => [
-    index('dept_idx').on(table.department),
-])
+export const documents = pgTable(
+    'documents',
+    {
+        id: uuid().defaultRandom().primaryKey(),
+        fileName: text('file_name').notNull(),
+        externalId: text('external_id'),
+        department: text('department').notNull(),
+        mimeType: text('mime_type'),
+        createdAt: timestamp('created_at').defaultNow().notNull(),
+        updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    },
+    (table) => [index('dept_idx').on(table.department)]
+)
 
 /**
  * Tabella dei chunk  ( I "Figli" del "Padre" con i relativi vettori )
@@ -76,18 +87,18 @@ export const documentChunks = pgTable('documents_chunks', {
 
 export const chatSessions = pgTable('chat_sessions', {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: text('user_id').notNull(), 
+    userId: text('user_id').notNull(),
     title: text('title').default('Nuova Conversazione'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 export const chatMessages = pgTable('chat_messages', {
     id: uuid('id').primaryKey().defaultRandom(),
-    
-    sessionId: uuid('session_id').references( () => chatSessions.id, {
+
+    sessionId: uuid('session_id').references(() => chatSessions.id, {
         onDelete: 'cascade',
     }),
-    
+
     role: text('role', { enum: ['system', 'user', 'assistant'] }).notNull(),
     content: text('content').notNull(),
     // Salviamo anche i metadati del RAG se vogliamo fare debug dopo
@@ -96,12 +107,63 @@ export const chatMessages = pgTable('chat_messages', {
 })
 
 // NUOVA: Tabella per i feedback degli utenti
-export const chatFeedbacks = pgTable('chat_feedbacks', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    messageId: uuid('message_id').references(() => chatMessages.id, { onDelete: 'cascade' }).notNull(),
-    rating: integer('rating').notNull(), // 1 👍, -1 👎
-    comment: text('comment'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => [
-    index('msg_feedback_idx').on(table.messageId),
-])
+export const chatFeedbacks = pgTable(
+    'chat_feedbacks',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        messageId: uuid('message_id')
+            .references(() => chatMessages.id, { onDelete: 'cascade' })
+            .notNull(),
+        rating: integer('rating').notNull(), // 1 👍, -1 👎
+        comment: text('comment'),
+        createdAt: timestamp('created_at').defaultNow().notNull(),
+    },
+    (table) => [index('msg_feedback_idx').on(table.messageId)]
+)
+
+export const candidates = pgTable(
+    'candidates',
+    {
+        id: uuid('id').defaultRandom().primaryKey(),
+        // Dati personali piatti per ricerche e filtri rapidi dal pannello HR
+        fullName: text('full_name').notNull(),
+        email: text('email'),
+        phone: text('phone'),
+        location: text('location'),
+
+        // Strutture complesse salvate in JSONB (indicizzabili e flessibili)
+        skills: jsonb('skills').$type<string[]>().default([]).notNull(),
+        experience: jsonb('experience')
+            .$type<
+                Array<{
+                    role: string
+                    company: string
+                    period: string | null
+                    description: string | null
+                }>
+            >()
+            .default([])
+            .notNull(),
+        education: jsonb('education')
+            .$type<
+                Array<{
+                    degree: string
+                    institution: string
+                    year: string | null
+                }>
+            >()
+            .default([])
+            .notNull(),
+        languages: jsonb('languages').$type<string[]>().default([]).notNull(),
+
+        // Tracciamento del file fisico caricato tramite IFileStoragePort (Azure o Locale)
+        cvFileUrl: text('cv_file_url').notNull(),
+
+        createdAt: timestamp('created_at').defaultNow().notNull(),
+        updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    },
+    (table) => [
+        index('candidate_name_idx').on(table.fullName),
+        index('candidate_email_idx').on(table.email),
+    ]
+)

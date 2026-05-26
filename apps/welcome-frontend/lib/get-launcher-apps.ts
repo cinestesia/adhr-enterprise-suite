@@ -28,12 +28,12 @@ const APPS_DATA = [
         status: 'Active',
     },
     {
-        title: 'ATS - Applicant Tracking System',
+        title: 'Recruiting',
         description: 'Gestione candidati e annunci.',
         icon: Users,
         color: 'bg-[#A00407]',
-        url: '/recruitment',
-        status: 'Upcoming',
+        url: '/recruiting',
+        status: 'Active',
     },
     {
         title: 'Clienti',

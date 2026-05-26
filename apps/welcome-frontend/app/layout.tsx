@@ -53,10 +53,7 @@ export default function RootLayoutPage({
       >
         {/* <p className='font-geist'>ciao</p> */}
         {/* <p className='font-special'> font-special: emula una macchina da scrivere </p> */}
-      <Providers>
-        {children}
-      </Providers>
-
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

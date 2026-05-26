@@ -1,7 +1,7 @@
-import { IChatRepository } from '@/domain/ports/chat-repository.port'
+import { IChatRepositoryPort } from '@/domain/ports/chat-repository.port'
 
 export class GetChatHistoryUseCase {
-    constructor(private chatRepository: IChatRepository) {}
+    constructor(private chatRepository: IChatRepositoryPort) {}
 
     async execute(sessionId: string, userId: string) {
         // 1. Sicurezza: controlliamo che la sessione appartenga all'utente

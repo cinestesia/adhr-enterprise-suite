@@ -1,6 +1,6 @@
 /**
  * @note
- * Punto di aggregazione per tutti i contesti client side 
+ * Punto di aggregazione per tutti i contesti client side
  */
 
 'use client'
@@ -14,11 +14,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionWrapper>
-        <QueryClientProvider client={queryClient}>
-             <TooltipProvider delayDuration={0}>
-                {children}
-            </TooltipProvider>
-        </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+      </QueryClientProvider>
     </SessionWrapper>
   )
 }

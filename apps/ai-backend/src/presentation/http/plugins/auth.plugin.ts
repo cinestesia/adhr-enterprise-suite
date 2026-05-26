@@ -6,12 +6,13 @@ import fp from 'fastify-plugin'
 /**
  * @note
  * Utilizziamo fastify-plugin per "rompere" l'incapsulamento di Fastify.
- * Senza questo, le decorazioni come .authenticate resterebbero confinate 
+ * Senza questo, le decorazioni come .authenticate resterebbero confinate
  * all'interno di questo plugin e non sarebbero visibili nelle rotte.
  */
 export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance) {
     const keycloakIssuer =
-        process.env.KEYCLOAK_ISSUER || 'http://auth.4.232.3.98.nip.io/realms/internal-adhr'
+        process.env.KEYCLOAK_ISSUER ||
+        'http://auth.4.232.3.98.nip.io/realms/internal-adhr'
 
     // JWKS client per recuperare le chiavi pubbliche di Keycloak
     const client = jwksRsa({
@@ -21,58 +22,57 @@ export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance)
         cacheMaxAge: 600000, // 10 minuti
     })
 
-    
-        // secret: async (_request: FastifyRequest, token: string | object) => {
-        //     console.log("TOKKKKEN", token)
-        //     if (typeof token !== 'string') {
-        //         throw new Error('Token JWT non valido (non è una stringa)')
-        //     }
+    // secret: async (_request: FastifyRequest, token: string | object) => {
+    //     console.log("TOKKKKEN", token)
+    //     if (typeof token !== 'string') {
+    //         throw new Error('Token JWT non valido (non è una stringa)')
+    //     }
 
-        //     const decoded = fastify.jwt.decode(token, { complete: true }) as {
-        //         header?: { kid?: string }
-        //     } | null
+    //     const decoded = fastify.jwt.decode(token, { complete: true }) as {
+    //         header?: { kid?: string }
+    //     } | null
 
-        //     const kid = decoded?.header?.kid
-        //     if (!kid) {
-        //         throw new Error('Token JWT senza kid')
-        //     }
+    //     const kid = decoded?.header?.kid
+    //     if (!kid) {
+    //         throw new Error('Token JWT senza kid')
+    //     }
 
-        //     const key = await client.getSigningKey(kid)
-        //     return key.getPublicKey()
-        // },
+    //     const key = await client.getSigningKey(kid)
+    //     return key.getPublicKey()
+    // },
 
     // Registrazione del plugin JWT
     await fastify.register(fastifyJwt, {
         secret: async (request: FastifyRequest, tokenOrPayload: string | object) => {
             // 1. Recuperiamo il token crudo dall'header Authorization
             // perché è lì che risiede il 'kid' nell'header del JWT
-            console.log("TOKEN OR PAYLOAD", tokenOrPayload )
-            const authHeader = request.headers.authorization;
-            const rawToken = authHeader?.split(' ')[1];
+            console.log('TOKEN OR PAYLOAD', tokenOrPayload)
+            const authHeader = request.headers.authorization
+            const rawToken = authHeader?.split(' ')[1]
 
             if (!rawToken) {
-                throw new Error('Manca il token nella richiesta');
+                throw new Error('Manca il token nella richiesta')
             }
 
             // 2. Decodifichiamo l'header per trovare il kid
             const decoded = fastify.jwt.decode(rawToken, { complete: true }) as {
                 header?: { kid?: string }
-            } | null;
+            } | null
 
-            console.log("DECODED JWT HEADER", decoded?.header)
-            const kid = decoded?.header?.kid;
-            
+            console.log('DECODED JWT HEADER', decoded?.header)
+            const kid = decoded?.header?.kid
+
             if (!kid) {
-                throw new Error('Token JWT senza kid nell’header');
+                throw new Error('Token JWT senza kid nell’header')
             }
 
             // 3. Chiediamo a Keycloak la chiave pubblica per questo specifico kid
-            const key = await client.getSigningKey(kid);
-            return key.getPublicKey();
+            const key = await client.getSigningKey(kid)
+            return key.getPublicKey()
         },
         verify: {
             clockTolerance: 30, // Tolleranza per disallineamento orari server
-        } as any
+        } as any,
     })
 
     /**

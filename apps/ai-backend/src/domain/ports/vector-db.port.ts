@@ -16,6 +16,13 @@ import { Document } from '@langchain/core/documents'
  *
  *
  */
+
+export interface VectorSearchFilters {
+    department?: string
+    year?: number
+    fileNameKeyword?: string
+}
+
 export interface VectorSearchResult {
     content: string
     metadata: Record<string, any>
@@ -44,7 +51,7 @@ export interface IVectorDbPort {
     similaritySearch(
         query: string,
         limit?: number,
-        filters?: Record<string, any>
+        filters?: VectorSearchFilters
     ): Promise<VectorSearchResult[]>
 
     /**

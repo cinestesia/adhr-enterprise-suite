@@ -12,7 +12,16 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { Bot, Briefcase, LayoutDashboard, Settings, Sparkles, Plus, MessageSquare, Loader2 } from 'lucide-react'
+import {
+  Bot,
+  Briefcase,
+  LayoutDashboard,
+  Settings,
+  Sparkles,
+  Plus,
+  MessageSquare,
+  Loader2,
+} from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useChatSessions } from '@/features/chat/hooks/use-chat-history'
@@ -20,20 +29,20 @@ import { useChatSessions } from '@/features/chat/hooks/use-chat-history'
 const items = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Chatbot', url: '/ai-agent', icon: Bot },
-  { title: 'Gestione Clienti', url: '/clients', icon: Briefcase },
+  { title: 'Recruiting', url: '/recruiting', icon: Briefcase },
   { title: 'Configurazioni', url: '/settings', icon: Settings },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname()
   const { setOpenMobile, isMobile } = useSidebar()
-  
+
   const { data: sessions, isLoading } = useChatSessions()
 
   const handleLinkClick = () => {
     if (isMobile) setOpenMobile(false)
   }
-
+  console.log('SESSONS', sessions)
   return (
     <Sidebar
       className="border-r border-adhr-zinc-light bg-white/50 backdrop-blur-xl backdrop-saturate-150"
@@ -58,7 +67,9 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {items.map((item) => {
-                const isActive = pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url))
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== '/' && pathname.startsWith(item.url))
                 return (
                   <SidebarMenuItem key={item.title} onClick={handleLinkClick}>
                     <SidebarMenuButton
@@ -68,8 +79,13 @@ export function AppSidebar() {
                       className="transition-all duration-300 py-6 px-4 rounded-xl data-[active=true]:bg-primary/9 data-[active=true]:text-primary hover:bg-adhr-zinc-light/20 group-data-[collapsible=icon]:py-6"
                     >
                       <Link href={item.url} className="flex items-center gap-4">
-                        <item.icon className={`size-5 ${isActive ? 'text-primary scale-110' : 'text-adhr-zinc-light'}`} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className={`text-[14px] tracking-tight ${isActive ? 'font-bold' : 'font-medium text-adhr-zinc-medium'}`}>
+                        <item.icon
+                          className={`size-5 ${isActive ? 'text-primary scale-110' : 'text-adhr-zinc-light'}`}
+                          strokeWidth={isActive ? 2.5 : 2}
+                        />
+                        <span
+                          className={`text-[14px] tracking-tight ${isActive ? 'font-bold' : 'font-medium text-adhr-zinc-medium'}`}
+                        >
                           {item.title}
                         </span>
                       </Link>
@@ -104,7 +120,7 @@ export function AppSidebar() {
               <Plus className="size-3 cursor-pointer hover:text-primary transition-colors" />
             </Link>
           </SidebarGroupLabel>
-          
+
           <SidebarMenu>
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
@@ -114,12 +130,15 @@ export function AppSidebar() {
               // Se è un array ed è pieno, lo mappiamo
               sessions.map((session: any) => (
                 <SidebarMenuItem key={session.id}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname.includes(session.id)}
                     className="py-5 px-4 h-auto"
                   >
-                    <Link href={`/ai-agent/${session.id}`} className="flex flex-col items-start gap-0">
+                    <Link
+                      href={`/ai-agent/${session.id}`}
+                      className="flex flex-col items-start gap-0"
+                    >
                       <div className="flex items-center gap-2 w-full">
                         <MessageSquare className="size-3 text-zinc-400 shrink-0" />
                         <span className="text-[13px] font-medium truncate w-full italic text-zinc-700">
@@ -127,7 +146,9 @@ export function AppSidebar() {
                         </span>
                       </div>
                       <span className="text-[10px] text-zinc-400 pl-5">
-                        {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'Oggi'}
+                        {session.createdAt
+                          ? new Date(session.createdAt).toLocaleDateString()
+                          : 'Oggi'}
                       </span>
                     </Link>
                   </SidebarMenuButton>

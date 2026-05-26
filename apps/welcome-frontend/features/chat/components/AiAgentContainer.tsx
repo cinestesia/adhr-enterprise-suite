@@ -16,9 +16,14 @@ export function AIAgentContainer({ sessionId }: AiAgentContainerProps) {
   return (
     <>
       {!isOnline && (
-        <Alert variant="warning" className="mb-4 animate-in slide-in-from-top border-amber-200 bg-amber-50">
+        <Alert
+          variant="warning"
+          className="mb-4 animate-in slide-in-from-top border-amber-200 bg-amber-50"
+        >
           <WifiOff className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800 font-bold text-xs">Sei offline</AlertTitle>
+          <AlertTitle className="text-amber-800 font-bold text-xs">
+            Sei offline
+          </AlertTitle>
           <AlertDescription className="text-amber-700 text-xs">
             I messaggi verranno inviati non appena la connessione tornerà disponibile.
           </AlertDescription>
@@ -31,7 +36,7 @@ export function AIAgentContainer({ sessionId }: AiAgentContainerProps) {
         isLoading={isLoading}
         isTyping={isTyping}
       />
-      
+
       <div className="mt-auto pt-4">
         <ChatInput onSend={sendMessage} disabled={isLoading} />
         <p className="text-[10px] text-center text-zinc-400 mt-2 italic">

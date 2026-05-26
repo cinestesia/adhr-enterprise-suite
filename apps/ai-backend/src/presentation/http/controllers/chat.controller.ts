@@ -6,11 +6,11 @@ import { z } from 'zod'
 import { ChatUseCase } from '@/application/use-cases/chat.use-case'
 import { GetChatHistoryUseCase } from '@/application/use-cases/get-chat-history.use-case'
 import { GetUserSessionsUseCase } from '@/application/use-cases/get-user-sessions.use-case'
+import { ChatViewMapper } from '@/mappers/chat-view.mapper'
 
 export class ChatController {
-    
     constructor(
-        private chatUseCase: ChatUseCase, 
+        private chatUseCase: ChatUseCase,
         private getChatHistoryUseCase: GetChatHistoryUseCase,
         private getUserSessionsUseCase: GetUserSessionsUseCase
     ) {}
@@ -19,10 +19,15 @@ export class ChatController {
         try {
             const { sessionId } = request.params as { sessionId: string }
             const userDomain = AuthTokenToUserMapper.toDomain(request.user)
-            const messages = await this.getChatHistoryUseCase.execute(sessionId, userDomain.id)
+            const messages = await this.getChatHistoryUseCase.execute(
+                sessionId,
+                userDomain.id
+            )
             return reply.send(messages)
         } catch (error) {
-            return reply.code(403).send({ error: 'FORBIDDEN', message: (error as Error).message })
+            return reply
+                .code(403)
+                .send({ error: 'FORBIDDEN', message: (error as Error).message })
         }
     }
 
@@ -30,9 +35,12 @@ export class ChatController {
         try {
             const userDomain = AuthTokenToUserMapper.toDomain(request.user)
             const sessions = await this.getUserSessionsUseCase.execute(userDomain.id)
-            return reply.send(sessions)
+            const responseBody = sessions.map((session) =>
+                ChatViewMapper.toResponse(session)
+            )
+            return reply.send(responseBody)
         } catch (error) {
-            console.log("ERROR======================================>", error)
+            request.log.error(error)
             return reply.code(500).send({ error: 'INTERNAL_ERROR' })
         }
     }
@@ -45,20 +53,20 @@ export class ChatController {
 
             /**
              * @note
-             * Validiamo il dato: un messsaggio di almeno 1 carattere è obbligatorio. 
+             * Validiamo il dato: un messsaggio di almeno 1 carattere è obbligatorio.
              * sessionId() è opzionale, se presente deve essere una UUID.
              * user deve essere un'istanza di User (già garantita dal mapper).
-             * 
-             * Si noti che a questo livello avvendono 3 cose: 
+             *
+             * Si noti che a questo livello avvendono 3 cose:
              * 1. Controllo dei tipi
              * 2. Controllo dei vincoli
              * 3. Sanificazione ( rimozione di eventuali campi extra non definiti nello schema )
-             * 
+             *
              */
 
-            const validatedData:ChatRequestDTO = ChatRequestSchema.parse({
+            const validatedData: ChatRequestDTO = ChatRequestSchema.parse({
                 ...(request.body as object),
-                user: userDomain
+                user: userDomain,
             })
 
             // Inizializziamo SSE ( Server Side Events ) solo dopo che la validazione è passata
@@ -67,20 +75,22 @@ export class ChatController {
             // Gestione chiusura connessione
             reply.raw.on('close', () => {
                 isClosed = true
-                request.log.info(`Client disconnected from session: ${validatedData.sessionId}`)
+                request.log.info(
+                    `Client disconnected from session: ${validatedData.sessionId}`
+                )
             })
 
-            // Il caso d'uso riceve il DTO validato. 
+            // Il caso d'uso riceve il DTO validato.
             // Restituisce lo stream e la sessionId (che potrebbe essere stata generata nuova)
-            
-            // VALIDATED DTO ====>  { 
-            //      message: 'ciao come stai?', 
-            //      user: User { 
+
+            // VALIDATED DTO ====>  {
+            //      message: 'ciao come stai?',
+            //      user: User {
             //          id: 'ca61c706-ee8e-49fb-8601-5aaa5c45cda7',
-            //          email: 'stella.rubia@mailinator.com', 
-            //          groups: [ '/Sede', '/Sede/Sistemi Informativi' ],      
-            //          name: 'Stella Rubia'     
-            //    } 
+            //          email: 'stella.rubia@mailinator.com',
+            //          groups: [ '/Sede', '/Sede/Sistemi Informativi' ],
+            //          name: 'Stella Rubia'
+            //    }
             // }
 
             const { stream, sessionId } = await this.chatUseCase.execute(validatedData)
@@ -96,16 +106,14 @@ export class ChatController {
             if (!isClosed) {
                 await sendSSE(reply, { type: 'done' })
             }
-
         } catch (error: unknown) {
-            
             request.log.error(error)
-            
+
             if (error instanceof z.ZodError) {
                 return reply.code(400).send({
                     error: 'VALIDATION_ERROR',
                     // 'issues' è il nome corretto della proprietà in Zod
-                    details: error.issues 
+                    details: error.issues,
                 })
             }
 
