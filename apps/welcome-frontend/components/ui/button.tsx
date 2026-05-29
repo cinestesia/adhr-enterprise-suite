@@ -9,7 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
+        // ↓ Gradiente ADHR, bordo interno luminoso, ombra colorata, hover con shift luminosità
+        default: [
+          'border-border',
+          'bg-primary',
+          'text-white',
+          'border-adhr-zinc-light',
+          'shadow-xs',
+          'shadow-adhr-zinc-shadow',
+          'hover:brightness-110',
+          'active:scale-[0.985] active:shadow-[0_1px_0_0_oklch(0.65_0.23_25)_inset,0_-1px_0_0_oklch(0.35_0.15_25)_inset,0_1px_3px_0_oklch(0.45_0.18_25_/_0.25)]',
+        ].join(' '),
 
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
@@ -29,7 +39,8 @@ const buttonVariants = cva(
         default:
           'h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        // ↓ h-9 fisso (no a capo), px-5 generoso, testo xs bold uppercase
+        sm: "h-9 gap-1.5 rounded-[min(var(--radius-md),12px)] px-5 text-xs font-bold uppercase tracking-wider in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
         lg: 'h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
         icon: 'size-8',
         'icon-xs':

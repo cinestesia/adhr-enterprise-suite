@@ -23,10 +23,10 @@ export class OllamaCvExtractorAdapter implements ICvExtractorPort {
             openAIApiKey: process.env.OPENAI_API_KEY || 'ollama',
             configuration: {
                 baseURL: process.env.AI_BASE_URL || 'http://localhost:11434/v1',
-                timeout: 300000,
+                timeout: 600000, // 10 minuti
             },
             model: process.env.AI_MODEL_NAME || 'llama3.1',
-            temperature: 0,
+            temperature: 0, // Puro determinismo, non possiamo inventare dati per un CV
         })
     }
 
@@ -36,6 +36,10 @@ export class OllamaCvExtractorAdapter implements ICvExtractorPort {
             Il tuo compito è analizzare il testo grezzo di un CV (spesso in formato Europass o standard italiano) e convertirlo in un JSON strutturato.
             Estrai i dati fedelmente, basandoti rigorosamente sul testo fornito. Non inventare informazioni. Se un campo manca, impostalo a null o array vuoto [].
 
+            [REGOLE SPECIFICHE PER COMPETENZE (SKILLS)]
+            - Analizza attentamente tutto il testo ed estrai OGNI competenza tecnica, hard skill, soft skill, tool software o metodologia menzionata nel CV.
+            - Non limitarti alle prime due o tre: compila un elenco esaustivo di tutte le skill rilevanti identificate.
+
             [REGOLE SPECIFICHE PER ISTRUZIONE E FORMAZIONE]
             - Includi nella sezione "education" tutti i percorsi scolastici e accademici: Diplomi di scuola superiore, Lauree (Triennali, Magistrali, Vecchio Ordinamento), Master, Dottorati e Corsi di specializzazione rilevanti.
             - "degree": Indica il titolo di studio conseguito (es. "Laurea Magistrale in Economia e Commercio", "Diploma di Perito Informatico").
@@ -43,7 +47,10 @@ export class OllamaCvExtractorAdapter implements ICvExtractorPort {
             - "year": Estrai l'anno di conseguimento o il periodo (es. "2024" o "2018 - 2022"). Se il percorso è in corso, indica "In corso".
             - "grade": Se menzionato, estrai il voto finale (es. "110/110 Lode", "85/100"). Se non presente, imposta a null.
 
-            Rispondi ESCLUSIVAMENTE con un oggetto JSON valido avente questa struttura, senza alcun testo o markdown prima o dopo l'oggetto:
+            Rispondi ESCLUSIVAMENTE con un oggetto JSON valido. 
+            Non includere blocchi di codice markdown (NO \`\`\`json ... \`\`\`), introduzioni o conclusioni. La tua risposta deve iniziare con '{' e terminare con '}'.
+
+            Ecco la struttura da rispettare rigidamente:
             {
                 "personalData": {
                     "fullName": "Nome e Cognome",
@@ -51,7 +58,7 @@ export class OllamaCvExtractorAdapter implements ICvExtractorPort {
                     "phone": "stringa o null",
                     "location": "Città, Provincia o null"
                 },
-                "skills": ["Skill 1", "Skill 2"],
+                "skills": ["Informatica", "Problem Solving", "Gestionale XYZ"],
                 "experience": [
                     { 
                         "role": "Qualifica / Ruolo", 
@@ -68,7 +75,7 @@ export class OllamaCvExtractorAdapter implements ICvExtractorPort {
                         "grade": "Votazione o null"
                     }
                 ],
-                "languages": ["Lingua 1", "Lingua 2"]
+                "languages": ["Italiano", "Inglese"]
             }
         `.trim()
 

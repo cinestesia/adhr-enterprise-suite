@@ -1,114 +1,194 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
-import { UploadCloud, FileArchive, Loader2 } from 'lucide-react'
-import JSZip from 'jszip'
+/**
+ * @file cv-dropzone.tsx
+ * @description Componente UI per il caricamento dei CV.
+ *
+ * Responsabilità di questo file:
+ *  - Rendering della dropzone e dei suoi stati visivi
+ *  - Orchestrazione dei moduli di validazione, ZIP e folder-traversal
+ *  - Feedback utente tramite sonner toast
+ *
+ * Logica di business delegata a:
+ *  - lib/cv-upload/validators.ts
+ *  - lib/cv-upload/zip-processor.ts
+ *  - lib/cv-upload/folder-traversal.ts
+ */
+
+import React, { useState, useRef, useCallback } from 'react'
+import { UploadCloud, FileArchive, Loader2, FolderOpen } from 'lucide-react'
+import { toast } from 'sonner'
+import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+
+import { validateFile, LIMITS } from '@/lib/cv-upload/validators'
+import { processZipFile } from '@/lib/cv-upload/zip-processor'
+import { traverseFileTree } from '@/lib/cv-upload/folder-traversal'
+
+// ─── Tipi ────────────────────────────────────────────────────────────────────
 
 interface CvDropzoneProps {
   onFilesSelected: (files: File[]) => void
 }
 
+// ─── Componente ──────────────────────────────────────────────────────────────
+
 export function CvDropzone({ onFilesSelected }: CvDropzoneProps) {
-  const [isDragActive, setIsDragActive] = useState(false)
-  const [isUnzipping, setIsUnzipping] = useState(false)
+
+  const [isDragActive, setIsDragActive]   = useState(false)
+  const [isUnzipping, setIsUnzipping]     = useState(false)
+  const [unzipProgress, setUnzipProgress] = useState(0)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'md']
+  // ── Helpers di notifica (sonner) ─────────────────────────────────────────
 
-  // Helper per filtrare e verificare se un file è supportato
-  const isSupportedFile = (fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase()
-    return ALLOWED_EXTENSIONS.includes(ext || '')
-  }
+  const notifySuccess = useCallback((message: string) => {
+    toast.success(message)
+  }, [])
 
-  // Funzione ricorsiva per estrarre i file dallo ZIP client-side
-  const processZipFile = async (zipFile: File) => {
+  const notifyError = useCallback((message: string) => {
+    toast.error(message)
+  }, [])
+
+  const notifyWarning = useCallback((message: string) => {
+    toast.warning(message)
+  }, [])
+
+  // ── Gestione ZIP ─────────────────────────────────────────────────────────
+
+  const handleZip = useCallback(async (zipFile: File) => {
     setIsUnzipping(true)
-    try {
-      const zip = await JSZip.loadAsync(zipFile)
-      const extractedFiles: File[] = []
+    setUnzipProgress(0)
 
-      // Scorriamo tutti i file dentro lo ZIP
-      for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-        // Ignoriamo le cartelle interne o i file nascosti del sistema operativo (es. __MACOSX)
-        if (
-          zipEntry.dir ||
-          relativePath.includes('__MACOSX') ||
-          relativePath.startsWith('.')
-        )
-          continue
+    const result = await processZipFile(zipFile, setUnzipProgress)
 
-        if (isSupportedFile(zipEntry.name)) {
-          const blob = await zipEntry.async('blob')
-          // Creiamo un oggetto File standard dall'entry dello ZIP
-          const file = new File([blob], zipEntry.name, { type: blob.type })
-          extractedFiles.push(file)
-        }
-      }
+    setIsUnzipping(false)
+    setUnzipProgress(0)
 
-      if (extractedFiles.length > 0) {
-        onFilesSelected(extractedFiles)
-      } else {
-        alert('Nessun file valido (PDF, DOCX, TXT) trovato all’interno dello ZIP.')
-      }
-    } catch (err) {
-      console.error('Errore durante la scompattazione dello ZIP:', err)
-      alert('Impossibile leggere il file ZIP. Potrebbe essere danneggiato.')
-    } finally {
-      setIsUnzipping(false)
+    result.errors.forEach(notifyError)
+    result.warnings.forEach(w => notifyWarning(w.reason))
+
+    if (result.files.length > 0) {
+      onFilesSelected(result.files)
+      notifySuccess(`${result.files.length} file estratti con successo.`)
     }
-  }
+  }, [notifyError, notifyWarning, notifySuccess, onFilesSelected])
 
-  // Gestione dei file filtrati (smista tra ZIP e file singoli)
-  const handleFiles = async (fileList: FileList | null) => {
-    if (!fileList) return
-    const filesArray = Array.from(fileList)
+  // ── Gestione file diretti (FileList da input o drop) ─────────────────────
 
-    const zipFiles = filesArray.filter((f) => f.name.endsWith('.zip'))
-    const validDirectFiles = filesArray.filter((f) => isSupportedFile(f.name))
+  const handleDirectFiles = useCallback((rawFiles: File[]) => {
+    const valid   = rawFiles.filter(f => validateFile(f).ok)
+    const invalid = rawFiles.length - valid.length
 
-    // Se c'è uno ZIP, lo processiamo subito
-    if (zipFiles.length > 0) {
-      await processZipFile(zipFiles[0])
+    if (invalid > 0) notifyWarning(`${invalid} file ignorati per formato o dimensione non valida.`)
+
+    const limited = valid.slice(0, LIMITS.MAX_TOTAL_FILES)
+    if (valid.length > LIMITS.MAX_TOTAL_FILES) {
+      notifyWarning(`Limite di ${LIMITS.MAX_TOTAL_FILES} file raggiunto.`)
     }
-    // Altrimenti passiamo i file validi caricati direttamente
-    else if (validDirectFiles.length > 0) {
-      onFilesSelected(validDirectFiles)
+
+    if (limited.length > 0) {
+      onFilesSelected(limited)
+      notifySuccess(`${limited.length} file caricati.`)
     } else {
-      alert(
-        'Nessun formato supportato inserito. Carica file PDF, DOCX, TXT o un archivio ZIP.'
-      )
+      notifyError('Nessun file valido. Usa PDF, DOCX, TXT o un archivio ZIP.')
     }
-  }
+  }, [notifyWarning, notifyError, notifySuccess, onFilesSelected])
 
-  // Eventi Drag & Drop standard
-  const handleDrag = (e: React.DragEvent) => {
+  // ── Handler input click ───────────────────────────────────────────────────
+
+  const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files
+    if (!fileList) return
+
+    const files    = Array.from(fileList)
+    const zipFiles = files.filter(f => f.name.endsWith('.zip'))
+    const rest     = files.filter(f => !f.name.endsWith('.zip'))
+
+    if (zipFiles.length > 0) {
+      await handleZip(zipFiles[0])
+    } else {
+      handleDirectFiles(rest)
+    }
+  }, [handleZip, handleDirectFiles])
+
+  // ── Handler drag & drop ───────────────────────────────────────────────────
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') setIsDragActive(true)
-    else if (e.type === 'dragleave') setIsDragActive(false)
-  }
+    setIsDragActive(e.type === 'dragenter' || e.type === 'dragover')
+  }, [])
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragActive(false)
-    if (e.dataTransfer.files) {
-      await handleFiles(e.dataTransfer.files)
+
+    const items = e.dataTransfer.items
+    if (!items) return
+
+    const directFiles: File[] = []
+    const zipFiles:    File[] = []
+
+    for (let i = 0; i < items.length; i++) {
+      if (directFiles.length >= LIMITS.MAX_TOTAL_FILES) break
+
+      const item = items[i]
+      if (item.kind !== 'file') continue
+
+      const entry = item.webkitGetAsEntry()
+      if (!entry) continue
+
+      if (entry.isDirectory) {
+        const { files } = await traverseFileTree(entry)
+        directFiles.push(...files)
+      } else {
+        const file = item.getAsFile()
+        if (!file) continue
+        file.name.endsWith('.zip') ? zipFiles.push(file) : directFiles.push(file)
+      }
     }
-  }
+
+    if (zipFiles.length > 0) {
+      await handleZip(zipFiles[0])
+    } else {
+      handleDirectFiles(directFiles)
+    }
+  }, [handleZip, handleDirectFiles])
+
+  // ── Trigger input ─────────────────────────────────────────────────────────
+
+  const triggerFileSelection = useCallback((asDirectory: boolean) => {
+    const input = fileInputRef.current
+    if (!input) return
+    asDirectory
+      ? (input.setAttribute('webkitdirectory', ''), input.setAttribute('directory', ''))
+      : (input.removeAttribute('webkitdirectory'), input.removeAttribute('directory'))
+    input.value = ''
+    input.click()
+  }, [])
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div
+      role="region"
+      aria-label="Area caricamento curriculum"
       onDragEnter={handleDrag}
       onDragOver={handleDrag}
       onDragLeave={handleDrag}
       onDrop={handleDrop}
-      className={`flex flex-col items-center justify-center min-h-[420px] border-2 border-dashed rounded-xl p-12 transition text-center select-none ${
+      className={[
+        'flex flex-col items-center justify-center min-h-[440px]',
+        'border-2 border-dashed rounded-lg p-12',
+        'transition-all duration-200 text-center select-none bg-background',
         isDragActive
-          ? 'border-red-600 bg-red-50/10 text-red-900'
-          : 'border-zinc-200 bg-zinc-50/40 text-zinc-500 hover:bg-zinc-50/80 hover:border-zinc-300'
-      }`}
+          ? 'border-primary bg-primary/5 scale-[0.995]'
+          : 'border-border hover:bg-muted/30 hover:border-muted-foreground/40',
+      ].join(' ')}
     >
       <input
         type="file"
@@ -116,59 +196,73 @@ export function CvDropzone({ onFilesSelected }: CvDropzoneProps) {
         className="hidden"
         multiple
         accept=".pdf,.docx,.txt,.md,.zip"
-        onChange={(e) => handleFiles(e.target.files)}
+        aria-hidden="true"
+        onChange={handleInputChange}
       />
 
       {isUnzipping ? (
-        <div className="space-y-3 animate-pulse">
-          <Loader2 className="size-12 text-red-600 animate-spin mx-auto" />
-          <h3 className="font-semibold text-zinc-800 text-lg">
-            Estrazione file in corso...
-          </h3>
-          <p className="text-sm text-zinc-500 max-w-xs">
-            Sto decomprimendo l’archivio ZIP direttamente sul tuo browser senza occupare
-            la banda del server.
+        // ── Stato: estrazione ZIP in corso ──────────────────────────────────
+        <div className="space-y-4 max-w-sm w-full text-center">
+          <Loader2 className="size-10 text-primary animate-spin mx-auto" />
+          <p className="font-semibold text-sm text-foreground uppercase tracking-wide">
+            Estrazione archivio…
+          </p>
+          <Progress value={unzipProgress} className="h-1.5" />
+          <p className="text-xs text-muted-foreground">
+            {unzipProgress}% — I file vengono elaborati localmente nel browser.
           </p>
         </div>
       ) : (
-        <div className="space-y-4 max-w-sm">
-          <div className="p-4 bg-white rounded-full shadow-xs inline-flex text-zinc-700 border border-zinc-100 mx-auto">
-            <UploadCloud className="size-8 text-zinc-600" />
+        // ── Stato: idle ─────────────────────────────────────────────────────
+        <div className="space-y-6 max-w-md">
+          <div className="p-4 bg-muted border border-border rounded-full inline-flex mx-auto">
+            <UploadCloud
+              className={`size-8 transition-colors duration-200 ${
+                isDragActive ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            />
           </div>
-          <div>
-            <h3 className="font-semibold text-zinc-800 text-base">
-              Trascina qui i tuoi Curriculum
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-foreground text-base uppercase tracking-wider">
+              Trascina i tuoi Curriculum
             </h3>
-            <p className="text-xs text-zinc-500 mt-1">
-              Rilascia file singoli, seleziona una cartella o trascina direttamente un
-              file **archivio .ZIP**.
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+              File singoli, una cartella o un archivio{' '}
+              <code className="font-mono text-primary font-bold">.ZIP</code>.
+              Massimo {LIMITS.MAX_TOTAL_FILES} file per sessione.
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-xs font-semibold hover:bg-zinc-800 transition shadow-xs"
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">    
+            
+            <Button
+              size="sm"
+              onClick={() => triggerFileSelection(false)}
+              className="w-full sm:w-auto uppercase tracking-wider text-xs"
             >
               Sfoglia File
-            </button>
+            </Button>
 
-            {/* Trucco HTML5: webkitdirectory permette di selezionare una cartella intera */}
-            <button
-              onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.webkitdirectory = true
-                  fileInputRef.current.click()
-                }
-              }}
-              className="px-4 py-2 bg-white text-zinc-700 border border-zinc-200 rounded-lg text-xs font-semibold hover:bg-zinc-50 transition shadow-xs"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => triggerFileSelection(true)}
+              className="w-full sm:w-auto uppercase tracking-wider text-xs gap-2"
             >
+              <FolderOpen className="size-3.5" />
               Carica Cartella
-            </button>
+            </Button>
           </div>
 
-          <div className="text-[10px] text-zinc-400 border-t border-zinc-100/80 pt-3 flex items-center justify-center gap-1.5">
-            <FileArchive className="size-3.5" /> Estensioni accettate: PDF, DOCX, TXT, ZIP
+          <div className="flex items-center justify-center gap-1.5 border-t border-border pt-4">
+            <FileArchive className="size-3.5 text-muted-foreground" />
+            {(['PDF', 'DOCX', 'TXT', 'ZIP'] as const).map(ext => (
+              <Badge key={ext} variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
+                {ext}
+              </Badge>
+            ))}
+            <span className="text-[10px] text-muted-foreground font-mono ml-1">max 10 MB</span>
           </div>
         </div>
       )}

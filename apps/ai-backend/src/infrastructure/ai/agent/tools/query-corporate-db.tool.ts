@@ -1,11 +1,11 @@
 // apps/ai-backend/src/infrastructure/agent/tools/query-corporate-db.tool.ts
 import { ITool } from '@/domain/ports/tool.port'
 import { ToolSpecification, ToolExecutionContext } from '@/domain/models/agent.model'
-import { ICorporateRepository } from '@/domain/ports/corporate-repository.port'
+import { ICorporateRepositoryPort } from '@/domain/ports/corporate-repository.port'
 
 export class QueryCorporateDbTool implements ITool {
     // Iniezione del Porto di Dominio! Rispettiamo in pieno la Clean Architecture
-    constructor(private corporateRepo: ICorporateRepository) {}
+    constructor(private corporateRepo: ICorporateRepositoryPort) {}
 
     get specification(): ToolSpecification {
         return {

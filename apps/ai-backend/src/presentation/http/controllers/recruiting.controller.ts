@@ -12,7 +12,7 @@ export class RecruitingController {
 
     /**
      * @note
-     * Endpoint per caricare un cv ed estrarre i dati in streaming (SSE).
+     * handler per caricare un cv ed estrarre i dati in streaming (SSE).
      * Mantiene le validazioni Zod ereditate dall'Ingestion del RAG.
      */
     async extract(request: FastifyRequest, reply: FastifyReply) {
@@ -25,14 +25,23 @@ export class RecruitingController {
         }
 
         try {
-            // 1. Mappatura e Validazione Zod (Blocca subito i file corrotti o >10MB)
+            /**
+             * @note
+             * Qui ci occupiamo di mappare una richiesta in un DTO
+             * che rappresenta un file. Ci occupiamo anche della
+             * validazione ZOD secondo come specificato dal DTO.
+             *
+             */
             const fileData = await FileMapper.toIngestDTO(data)
             const cvFileSchema = IngestRequestSchema.omit({ department: true })
             const validatedFileData = cvFileSchema.parse(fileData)
 
-            // 2. Se la validazione passa, inizializziamo IMMEDIATAMENTE lo stream SSE
-            // Questo risponde subito con HTTP 200 al BFF di Next.js e azzera il timer del
-            // timeout!
+            /**
+             * @note
+             * Se la validazione passa, inizializziamo immediatamente lo stream SSE
+             * Questo risponde subito con HTTP 200 al BFF ( Backed For Frontend ) di
+             * Next.js e azzera il timer del timeout
+             */
             initSSE(reply)
 
             // Gestione della disconnessione improvvisa del browser o del BFF
@@ -43,22 +52,27 @@ export class RecruitingController {
                 )
             })
 
-            // Notifichiamo all'interfaccia che il file è valido e stiamo leggendo il testo del PDF
-            await sendSSE(reply, { type: 'status', content: 'parsing_pdf' })
+            // Notifichiamo all'interfaccia che il file è valido e stiamo
+            // facendo il parsing del file.
+            await sendSSE(reply, { type: 'status', content: 'parsing_file' })
 
-            // Invochiamo il Caso d'Uso per avviare l'estrazione del testo e preparare lo stream dell'LLM
+            /**
+             * @note
+             * Invochiamo il Caso d'Uso per avviare l'estrazione dei dati strutturati
+             * dal file come stream, un token alla volta.
+             * il caso d'uso ritorna uno stream che collega direttamente l'output
+             * di ollama e il nostro controller.
+             */
             const tokenStream = await this.parseCvUseCase.extractDataStream(
                 validatedFileData.fileBuffer,
                 validatedFileData.fileName
             )
 
-
-            // Il PDF è stato letto con successo dal service, adesso passiamo la palla a Ollama
             if (!isClosed) {
-                await sendSSE(reply, { type: 'status', content: 'ollama_inference' })
+                await sendSSE(reply, { type: 'status', content: 'llm_inference' })
             }
 
-            // 3. Ciclo di streaming dei token generati da Ollama (Mantiene vivo il canale)
+            // Ciclo di streaming dei token generati da Ollama (Mantiene vivo il canale)
             for await (const chunk of tokenStream) {
                 if (isClosed) break
                 // Inviamo ogni pezzettino di testo (delta) conforme alla struttura della tua chat

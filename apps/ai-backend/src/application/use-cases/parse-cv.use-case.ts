@@ -42,6 +42,9 @@ export class ParseCvUseCase {
                 fileName,
             })
 
+            /**
+             *
+             */
             const rawText = await this.docParser.parseToText(fileBuffer, fileName)
 
             if (!rawText || rawText.trim().length === 0) {

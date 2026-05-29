@@ -10,7 +10,7 @@ export default function RecruitingPage() {
     <div className="space-y-6 h-full flex flex-col">
       <PageHeader
         title="Carica cv"
-        description="Carica i tuoi curricula in blocco (ZIP o file multipli) ed esegui lo screening semantico assistito dall'IA."
+        description="Carica i tuoi curricula in blocco (ZIP o file multipli, cartelle) ed esegui lo screening semantico assistito dall'IA."
       >
         <div className="p-2 bg-zinc-100 rounded-lg text-zinc-700">
           <BriefcaseBusiness className="size-5" />

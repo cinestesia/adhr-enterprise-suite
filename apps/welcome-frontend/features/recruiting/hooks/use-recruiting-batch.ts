@@ -10,10 +10,34 @@ export function useRecruitingBatch(
     files: CandidateFileBatch[],
     setFiles: React.Dispatch<React.SetStateAction<CandidateFileBatch[]>>
 ) {
-    // Manteniamo il ref aggiornato per evitare loop infiniti
+    /**
+     * Mantiene un riferimento mutabile che persiste per l'intero
+     * ciclo di vita del componente. Possiamo utilizzarlo per 
+     * memorizzare dati che non devono causare un re-render 
+     * quando aggiornati, come lo stato attuale dei file in lavorazione.
+     */
     const filesRef = useRef<CandidateFileBatch[]>(files)
     filesRef.current = files
 
+    /**
+     * Quando AtsContainer è pronto, e ogni volta che cambiano i files 
+     * oppure setFiles, viene eseguito questo effetto
+     * che cerca solo i file che sono in stato processing, e se ne sono più di 
+     * MAX_CONCURRENT_REQUESTS, ritorna immediatamente senza fare nulla. 
+     * 
+     * Altrimenti, prova a trovare il primo file in stato idle e se non lo 
+     * trova ritorna senza fare nulla. 
+     * 
+     * Se invece c'è stato un drop ci saranno uno o più file in stato 
+     * idle. Quindi questo hook va avanti nei suoi controlli e  
+     * 
+     * se trova un file idle, aggiorna lo stato in processing. 
+     * Prenota un re-render. 
+     * 
+     * L'elaborazione continua e viene invocato l'endpoint di Next.js 
+     * per avviare l'estrazione dei dati in streaming del CV.
+     * 
+     */
     useEffect(() => {
         const processingCount = files.filter((f) => f.status === 'processing').length
 
@@ -29,7 +53,7 @@ export function useRecruitingBatch(
                     ? {
                           ...f,
                           status: 'processing',
-                          stage: 'parsing_pdf',
+                          stage: 'parsing_file',
                           fileProgress: 5,
                       }
                     : f
@@ -96,9 +120,9 @@ export function useRecruitingBatch(
 
                             if (event.type === 'status') {
                                 if (event.content === 'parsing_pdf') {
-                                    updateProgress('parsing_pdf', 15)
+                                    updateProgress('parsing_file', 15)
                                 } else if (event.content === 'ollama_inference') {
-                                    updateProgress('ollama_inference', 25)
+                                    updateProgress('llm_inference', 25)
 
                                     // 🌟 FLUIDIFICATORE UX: Ollama su CPU impiega tempo prima di sputare il primo token.
                                     // Creiamo un finto avanzamento incrementale per dare feedback visivo dinamico.

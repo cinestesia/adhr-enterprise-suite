@@ -25,7 +25,7 @@ export class ParseCvStreamingUseCase {
                 fileName,
             })
 
-            // 1. Estrazione del testo dal PDF (Sincrona/Bloccante ma veloce)
+            // 1. Estrazione del testo dal file (Sincrona/Bloccante ma veloce)
             const rawText = await this.docParser.parseToText(fileBuffer, fileName)
 
             if (!rawText || rawText.trim().length === 0) {
@@ -40,7 +40,12 @@ export class ParseCvStreamingUseCase {
                 fileName,
             })
 
-            // 2. Chiamata alla porta dell'infrastruttura che restituisce lo stream
+            /**
+             * @note
+             * Chiamata alla porta dell'infrastruttura che restituisce lo stream
+             * si noti che il cv extractor è di solito eseguito da un LLM. Vedi nel
+             * DI cosa iniettiamo.
+             */
             const tokenStream = await this.cvExtractor.extractStream(rawText)
 
             return tokenStream

@@ -1,13 +1,13 @@
 // apps/ai-backend/src/application/services/session.service.ts
 
-import { IChatRepository } from '@/domain/ports/chat-repository.port'
+import { IChatRepositoryPort } from '@/domain/ports/chat-repository.port'
 import { IChatPort } from '@/domain/ports/chat.port'
 import { ChatSession } from '@/domain/models/chat-session.model'
 import { randomUUID } from 'crypto'
 
 export class SessionService {
     constructor(
-        private chatRepo: IChatRepository,
+        private chatRepo: IChatRepositoryPort,
         private aiGateway: IChatPort // Serve per la generazione del titolo
     ) {}
 

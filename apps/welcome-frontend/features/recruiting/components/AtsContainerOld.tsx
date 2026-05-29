@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { useRecruitingBatch } from '../hooks/use-recruiting-batch'
-import { CvDropzone } from './CvDropzone'
+import { CvDropzone } from './CvDropzoneGemini'
 import { ExtractedCvData, confirmCandidate } from '../services/recruiting.service'
 
 export interface CandidateFileBatch {

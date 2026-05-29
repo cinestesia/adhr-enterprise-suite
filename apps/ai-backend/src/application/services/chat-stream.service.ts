@@ -1,9 +1,9 @@
-import { IChatRepository } from '@/domain/ports/chat-repository.port'
+import { IChatRepositoryPort } from '@/domain/ports/chat-repository.port'
 import { ChatMessage } from '@/domain/models/chat-message.model'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
 
 export class ChatStreamService {
-    constructor(private chatRepo: IChatRepository) {}
+    constructor(private chatRepo: IChatRepositoryPort) {}
 
     /**
      * Intercetta i chunk dello stream AI, li accumula e salva il messaggio finale.

@@ -35,15 +35,15 @@ export async function POST(req: NextRequest) {
         const backendUrl = process.env.API_BACKEND_URL || 'http://localhost:3002'
         const backendFormData = new FormData()
         backendFormData.append('file', file)
-        
+
         const multipartWrapper = new Response(backendFormData)
         const computedContentType = multipartWrapper.headers.get('content-type')
-        
+
         const abortController = new AbortController()
         const timeoutId = setTimeout(() => abortController.abort(), 6000000)
-        
-        console.log("-> Invio a Fastify con Content-Type calcolato:", computedContentType)
-        
+
+        console.log('-> Invio a Fastify con Content-Type calcolato:', computedContentType)
+
         const { body, statusCode } = await undiciRequest(
             `${backendUrl}/api/v1/recruiting/extract`,
             {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
                 signal: abortController.signal,
             }
         )
-        
+
         clearTimeout(timeoutId)
 
         if (statusCode < 200 || statusCode >= 300) {
