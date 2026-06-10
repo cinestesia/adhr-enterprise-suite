@@ -11,3 +11,4 @@ export default async function SessionPage({
   // Passiamo il sessionId al componente client
   return <AIAgentContainer sessionId={sessionId} />
 }
+ 
