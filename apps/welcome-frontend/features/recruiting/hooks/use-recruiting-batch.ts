@@ -11,32 +11,24 @@ export function useRecruitingBatch(
     setFiles: React.Dispatch<React.SetStateAction<CandidateFileBatch[]>>
 ) {
     /**
-     * Mantiene un riferimento mutabile che persiste per l'intero
-     * ciclo di vita del componente. Possiamo utilizzarlo per 
-     * memorizzare dati che non devono causare un re-render 
-     * quando aggiornati, come lo stato attuale dei file in lavorazione.
-     */
-    const filesRef = useRef<CandidateFileBatch[]>(files)
-    filesRef.current = files
-
-    /**
-     * Quando AtsContainer è pronto, e ogni volta che cambiano i files 
+     * @note
+     * Quando AtsContainer è pronto, e ogni volta che cambiano i files
      * oppure setFiles, viene eseguito questo effetto
-     * che cerca solo i file che sono in stato processing, e se ne sono più di 
-     * MAX_CONCURRENT_REQUESTS, ritorna immediatamente senza fare nulla. 
-     * 
-     * Altrimenti, prova a trovare il primo file in stato idle e se non lo 
-     * trova ritorna senza fare nulla. 
-     * 
-     * Se invece c'è stato un drop ci saranno uno o più file in stato 
-     * idle. Quindi questo hook va avanti nei suoi controlli e  
-     * 
-     * se trova un file idle, aggiorna lo stato in processing. 
-     * Prenota un re-render. 
-     * 
-     * L'elaborazione continua e viene invocato l'endpoint di Next.js 
+     * che cerca solo i file che sono in stato "processing", e se ne sono più di
+     * MAX_CONCURRENT_REQUESTS, ritorna immediatamente senza fare nulla.
+     *
+     * Altrimenti, prova a trovare il primo file in stato "idle" e se non lo
+     * trova ritorna senza fare nulla.
+     *
+     * Se invece c'è stato un drop ci saranno uno o più file in stato
+     * idle. Quindi questo hook va avanti nei suoi controlli e
+     * se trova un file idle, aggiorna lo stato in processing.
+     * Prenota un re-render. Questo porterà alla ri-esecuzione di questo effetto.
+     *
+     *
+     * L'elaborazione continua e viene invocato l'endpoint di Next.js
      * per avviare l'estrazione dei dati in streaming del CV.
-     * 
+     *
      */
     useEffect(() => {
         const processingCount = files.filter((f) => f.status === 'processing').length
@@ -47,6 +39,9 @@ export function useRecruitingBatch(
         if (!nextFile) return
 
         // Portiamo lo stato a processing e inizializziamo i micro-stati di progressione
+        // siccome a setFiles() passo una funzione di aggiornamento basata sullo stato precedente
+        // ho sempre la certezza di lavorare con l'ultima versione aggiornata dello stato,
+        // anche se ci sono più file che finiscono in rapida successione e causano più re-render.
         setFiles((prev) =>
             prev.map((f) =>
                 f.id === nextFile.id
@@ -60,7 +55,12 @@ export function useRecruitingBatch(
             )
         )
 
-        // Lanciamo lo stream verso il BFF di Next.js
+        /**
+         * @note
+         * Lanciamo lo stream verso il BFF di Next.js per ogni file che etra in processing.
+         * all'interno del .then() inizia un ciclo while(true) che legge lo stream dei dati.
+         *
+         */
         extractCvStream(nextFile.fileObject)
             .then(async (response) => {
                 const reader = response.body?.getReader()
@@ -99,7 +99,8 @@ export function useRecruitingBatch(
                         bufferStr += decoder.decode(value, { stream: true })
                         const lines = bufferStr.split('\n')
 
-                        // L'ultimo elemento potrebbe essere incompleto, lo rimettiamo nel buffer per il prossimo ciclo
+                        // L'ultimo elemento potrebbe essere incompleto, lo rimettiamo nel buffer
+                        // per il prossimo ciclo
                         bufferStr = lines.pop() || ''
 
                         for (const line of lines) {
@@ -119,13 +120,14 @@ export function useRecruitingBatch(
                             // ─── GESTIONE DEGLI EVENTI SSE PERSONALIZZATI ───
 
                             if (event.type === 'status') {
-                                if (event.content === 'parsing_pdf') {
+                                if (event.content === 'parsing_file') {
                                     updateProgress('parsing_file', 15)
-                                } else if (event.content === 'ollama_inference') {
+                                } else if (event.content === 'llm_inference') {
                                     updateProgress('llm_inference', 25)
 
-                                    // 🌟 FLUIDIFICATORE UX: Ollama su CPU impiega tempo prima di sputare il primo token.
-                                    // Creiamo un finto avanzamento incrementale per dare feedback visivo dinamico.
+                                    // Ollama su CPU impiega tempo prima di sputare il primo token.
+                                    // Creiamo un finto avanzamento incrementale per dare feedback
+                                    // visivo dinamico.
                                     let currentFake = 25
                                     fakeProgressInterval = setInterval(() => {
                                         if (currentFake < 80) {
@@ -179,7 +181,8 @@ export function useRecruitingBatch(
                                 if (fakeProgressInterval)
                                     clearInterval(fakeProgressInterval)
 
-                                // 🏁 TRAGUARDO: Lo stream è completo. Convertiamo l'accumulatore nel JSON tipizzato final
+                                // TRAGUARDO: Lo stream è completo.
+                                // Convertiamo l'accumulatore nel JSON tipizzato final
                                 const cleanJsonContent = jsonAccumulator.trim()
 
                                 // Pulizia preventiva da eventuali blocchi markdown inseriti per errore dall'LLM

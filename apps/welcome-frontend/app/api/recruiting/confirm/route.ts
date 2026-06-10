@@ -10,6 +10,7 @@ const timeoutAgent = new Agent({
 
 export async function POST(req: NextRequest) {
     try {
+        
         const token = await getToken({
             req,
             secret: process.env.AUTH_SECRET,

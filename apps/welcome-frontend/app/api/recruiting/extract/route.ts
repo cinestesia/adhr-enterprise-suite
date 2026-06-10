@@ -36,6 +36,22 @@ export async function POST(req: NextRequest) {
         const backendFormData = new FormData()
         backendFormData.append('file', file)
 
+        /** 
+         * Utilizzando un oggetto Response constringo il runtime a calcolare correttamente il 
+         * Content-Type multipart/form-data con boundary, che è essenziale per Fastify.
+         * 
+         * Quando invii un file tramite un form multipart, l'header Content-Type non può essere 
+         * semplicemente multipart/form-data. Deve obbligatoriamente contenere una stringa 
+         * unica chiamata boundary (un delimitatore), generata dinamicamente in base 
+         * al contenuto del file per separare i vari campi nel body della richiesta.
+         * 
+         * Se usiamo la fetch standard del browser e le passiamo direttamente il new FormData(), 
+         * il browser fa tutto da solo: vede il FormData, genera il boundary, 
+         * lo appende all'header e invia i dati.
+         * 
+         * Con undici mi serve questo workaround
+         * 
+         */
         const multipartWrapper = new Response(backendFormData)
         const computedContentType = multipartWrapper.headers.get('content-type')
 
@@ -75,7 +91,7 @@ export async function POST(req: NextRequest) {
         }
 
         /**
-         * @note Bridge dello Stream (MODIFICATO 🚀)
+         * @note Bridging del ReadableStream di undici con l'interfaccia SSE del client Next.js.
          * Invece di fare body.json(), passiamo direttamente il 'body' (ReadableStream)
          * di undici all'interfaccia utente, impostando gli header corretti per l'SSE.
          */

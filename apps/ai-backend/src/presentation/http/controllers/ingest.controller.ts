@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { IngestFileUseCase } from '@/application/use-cases/ingest-file.use-case'
-import { FileMapper } from '@/mappers/file.mapper' // Assicurati che il percorso sia corretto
-import { IngestRequestSchema } from '@/dtos/ingest-request.dto'
+import { IngestFileUseCase } from '@/modules/shared/application/use-cases/ingest-file.use-case'
+import { FileMapper } from '@/presentation/mappers/file.mapper' // Assicurati che il percorso sia corretto
+import { IngestRequestSchema } from '@/modules/shared/dtos/ingest-request.dto'
 import { z } from 'zod'
 
 /**

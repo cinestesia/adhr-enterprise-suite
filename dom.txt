@@ -1,0 +1,115 @@
+ 7122  az postgres flexible-server create \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  # adhr-enterprise-db è il nome del Server. È l'indirizzo di collegamento (l'Host)\n  --name adhr-enterprise-db \ \n  --location italynorth \\n  --admin-user dbadmin \\n  --admin-password "TuaPasswordSicura123 \\n  --sku-name Standard_B1ms
+ 7123  az postgres flexible-server create \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --name adhr-enterprise-db \ \n  --location italynorth \\n  --admin-user dbadmin \\n  --admin-password "TuaPasswordSicura123 \\n  --sku-name Standard_B1ms
+ 7124  az postgres flexible-server create \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --name adhr-enterprise-db \ \n  --location italynorth \\n  --admin-user dbadmin \\n  --admin-password "Caligola134312 \\n  --sku-name Standard_B1ms
+ 7125  az postgres flexible-server create --resource-group ADHR-ENTERPRISE-SUITE --name adhr-enterprise-db --location italynorth --admin-user dbadmin --admin-password "Caligola134312 --sku-name Standard_B1ms
+ 7126  az postgres flexible-server create --resource-group ADHR-ENTERPRISE-SUITE --name adhr-enterprise-db --location italynorth --admin-user dbadmin --admin-password "Caligola134312 --sku-name Standard_B1ms\naz postgres flexible-server create --resource-group ADHR-ENTERPRISE-SUITE --name adhr-enterprise-db --location italynorth --admin-user dbadmin --admin-password --sku-name Standard_B1ms
+ 7127  az postgres flexible-server create --resource-group ADHR-ENTERPRISE-SUITE --name adhr-enterprise-db --location italynorth --admin-user admin --admin-password --sku-name Standard_B1ms
+ 7128  az postgres flexible-server create --resource-group ADHR-ENTERPRISE-SUITE --name adhr-enterprise-db --location italynorth --admin-user admin --admin-password Caligola134312! --sku-name Standard_B1ms
+ 7129  az postgres flexible-server create \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --name adhr-enterprise-db \\n  --location italynorth \\n  --admin-user dbadmin \\n  --admin-password "Caligola134312 \\n  --sku-name Standard_B1ms \\n  --tier Burstable
+ 7130  az postgres flexible-server create \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --name adhr-enterprise-db \\n  --location italynorth \\n  --admin-user dbadmin \\n  --admin-password Caligola134312 \\n  --sku-name Standard_B1ms \\n  --tier Burstable
+ 7131  az postgres flexible-server firewall-rule create \\n        --resource-group ADHR-ENTERPRISE-SUITE \\n        --name adhr-enterprise-db \\n        --rule-name AllowAllAzureServices \\n        --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+ 7346  az resource show \\n  --name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --resource-type "Microsoft.DBforPostgreSQL/flexibleServers" \\n  --query tags
+ 7550  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7553  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7673  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7675  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7677  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7775  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7796  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7798  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7904  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 7908  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8002  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8056  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8147  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8179  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8182  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8269  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8339  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8493  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8495  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8515  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8581  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8583  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8605  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8737  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8739  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8746  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8774  az postgres flexible-server parameter set \\n    --resource-group ADHR-ENTERPRISE-SUITE \\n    --server-name adhr-enterprise-db \\n    --name azure.extensions \\n    --value VECTOR
+ 8775  az postgres flexible-server connect
+ 8808  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8913  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8982  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8984  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8986  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8988  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 8994  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9053  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9056  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9162  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9172  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9247  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9359  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9400  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9402  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9404  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9512  z postgres flexible-server show \\n  --name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --query "state" \\n  --output tsv
+ 9513  az postgres flexible-server show \\n  --name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --query "state" \\n  --output tsv
+ 9514  az postgres flexible-server server-logs list \\n  --server-name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9515  az monitor activity-log list \\n  --resource-id $(az postgres flexible-server show --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE --query id --output tsv) \\n  --offset 3d \\n  --output table
+ 9516  az postgres flexible-server firewall-rule list \\n  --server-name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9518  az postgres flexible-server firewall-rule list \\n  --server-name adhr-enterprise-db.postgres.database.azure.com \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9519  az postgres flexible-server show \\n  --name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --query "fullyQualifiedDomainName" \\n  --output tsv
+ 9520  az postgres flexible-server firewall-rule list \\n  --server-name adhr-enterprise-db.postgres.database.azure.com \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9521  az postgres flexible-server firewall-rule list \\n  --server-name adhr-enterprise-db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9522  az postgres flexible-server firewall-rule list \\n  --server-name ai_db \\n  --resource-group ADHR-ENTERPRISE-SUITE \\n  --output table
+ 9523  az postgres flexible-server firewall-rule list --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE --output table
+ 9596  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9606  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9636  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9660  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9666  psql postgres://pier:piertest@adhr-az-db-flexible-dashboardcam.postgres.database.azure.com:5432/pierdb?sslmode=require\n
+ 9667  psql 'postgres://pier:piertest@adhr-az-db-flexible-dashboardcam.postgres.database.azure.com:5432/pierdb?sslmode=require'\n
+ 9668  psql 'postgres://pier:piertest@adhr-az-db-flexible-dashboardcam.postgres.database.azure.com:5432/pierdb'\n
+ 9669  psql 'server://pier:piertest@adhr-az-db-flexible-dashboardcam.postgres.database.azure.com:5432/pierdb?sslmode=require'\n
+ 9670  psql 'postgres://pier:piertest@adhr-az-db-flexible-dashboardcam.postgres.database.azure.com:5432/pierdb'\n
+ 9671  psql 'postgres://pier:piertest@adhr-az-db-flexible-dashboardcarm.postgres.database.azure.com:5432/pierdb?sslmode=require'
+ 9675  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9723  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9749  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9751  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9803  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9805  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9838  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9841  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9872  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9904  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9906  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9915  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9917  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9964  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+ 9970  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10024  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10095  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10097  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10153  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10155  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10198  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10299  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10301  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10308  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10322  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10324  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10346  az postgres flexible-server start --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10353  psql 'postgres://pier:piertest@adhr-az-db-flexible-dashboardcarm.postgres.database.azure.com:5432/pierdb?sslmode=require'
+10355  az postgres flexible-server show --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE --query "userVisibleState"
+10356  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10358  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10359  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10360  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10374  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10436  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10438  az postgres flexible-server list --resource-group ADHR-ENTERPRISE-SUITE --output table
+10439  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE
+10440  az postgres flexible-server delete --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE --yes
+10441  az postgres flexible-server stop --name adhr-enterprise-db --resource-group ADHR-ENTERPRISE-SUITE

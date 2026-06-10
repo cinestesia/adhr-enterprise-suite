@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { initSSE, sendSSE } from '@/presentation/http/helpers/sse.helpers'
-import { AuthTokenToUserMapper } from '@/mappers/auth-token-to-user.mapper'
-import { ChatRequestDTO, ChatRequestSchema } from '@/dtos/chat-request.dto'
+import { AuthTokenToUserMapper } from '@/presentation/mappers/auth-token-to-user.mapper'
+import { ChatRequestDTO, ChatRequestSchema } from '@/modules/chat/dtos/chat-request.dto'
 import { z } from 'zod'
-import { ChatUseCase } from '@/application/use-cases/chat.use-case'
-import { GetChatHistoryUseCase } from '@/application/use-cases/get-chat-history.use-case'
-import { GetUserSessionsUseCase } from '@/application/use-cases/get-user-sessions.use-case'
-import { ChatViewMapper } from '@/mappers/chat-view.mapper'
+import { ChatUseCase } from '@/modules/chat/application/use-cases/chat.use-case'
+import { GetChatHistoryUseCase } from '@/modules/chat/application/use-cases/get-chat-history.use-case'
+import { GetUserSessionsUseCase } from '@/modules/chat/application/use-cases/get-user-sessions.use-case'
+import { ChatViewMapper } from '@/presentation/mappers/chat-view.mapper'
 
 export class ChatController {
     constructor(

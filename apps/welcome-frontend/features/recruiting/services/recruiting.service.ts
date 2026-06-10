@@ -40,8 +40,6 @@ export async function extractCvStream(file: File): Promise<Response> {
         },
     })
 
-    console.log('RESPONSE', response)
-
     if (!response.ok) {
         const errData = await response.json().catch(() => ({}))
         throw new Error(errData.error || 'Errore durante l’estrazione del CV')

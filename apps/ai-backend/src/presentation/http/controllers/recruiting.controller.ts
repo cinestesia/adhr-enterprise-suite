@@ -1,11 +1,11 @@
 // presentation/http/controllers/recruiting.controller.ts
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { FileMapper } from '@/mappers/file.mapper'
+import { FileMapper } from '@/presentation/mappers/file.mapper'
 import { z } from 'zod'
-import { ConfirmSaveCandidateSchema } from '@/dtos/recruiting.dto'
-import { IngestRequestSchema } from '@/dtos/ingest-request.dto'
+import { ConfirmSaveCandidateSchema } from '@/modules/recruiting/dtos/recruiting.dto'
+import { IngestRequestSchema } from '@/modules/shared/dtos/ingest-request.dto'
 import { initSSE, sendSSE } from '@/presentation/http/helpers/sse.helpers'
-import { ParseCvStreamingUseCase } from '@/application/use-cases/parse-cv-streaming.use-case'
+import { ParseCvStreamingUseCase } from '@/modules/recruiting/application/use-cases/parse-cv-streaming.use-case'
 
 export class RecruitingController {
     constructor(private parseCvUseCase: ParseCvStreamingUseCase) {}

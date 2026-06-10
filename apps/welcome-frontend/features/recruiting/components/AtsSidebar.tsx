@@ -25,7 +25,6 @@ export const AtsSidebar = React.memo(function AtsSidebar({
 }: AtsSidebarProps) {
   return (
     <Card className="lg:col-span-4 flex flex-col p-4 overflow-hidden border-border bg-white shadow-xs h-full min-w-0">
-      
       {/* Header Avanzamento Globale */}
       <div className="mb-4 space-y-2 shrink-0 w-full">
         <div className="flex justify-between items-center">
@@ -61,11 +60,15 @@ export const AtsSidebar = React.memo(function AtsSidebar({
                   e assegna al badge un'area matematica fissa di 84px.
                 */}
                 <div className="grid grid-cols-[1fr_84px] items-center gap-2 w-full min-w-0">
-                  
                   {/* Blocco Icona + Nome File (Troncamento garantito dal min-w-0 della grid) */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <FileText className={`size-4 shrink-0 ${isSelected ? 'text-primary' : 'text-zinc-400'}`} />
-                    <span className="truncate text-xs block select-none" title={file.fileName}>
+                    <FileText
+                      className={`size-4 shrink-0 ${isSelected ? 'text-primary' : 'text-zinc-400'}`}
+                    />
+                    <span
+                      className="truncate text-xs block select-none"
+                      title={file.fileName}
+                    >
                       {file.fileName}
                     </span>
                   </div>
@@ -91,12 +94,12 @@ export const AtsSidebar = React.memo(function AtsSidebar({
 
                 {/* Micro barra di avanzamento del singolo file (Variante Shadcn 'micro') */}
                 {isProcessing && file.fileProgress !== undefined && (
-                    <Progress 
-                        value={file.fileProgress} 
-                        variant="micro" 
-                        className="bg-zinc-100/50 w-full"
-                        indicatorClassName="bg-warning" // <-- Puoi metterci bg-amber-500, bg-yellow-400, ecc.
-                    />
+                  <Progress
+                    value={file.fileProgress}
+                    variant="micro"
+                    className="bg-zinc-100/50 w-full"
+                    indicatorClassName="bg-warning" // <-- Puoi metterci bg-amber-500, bg-yellow-400, ecc.
+                  />
                 )}
               </div>
             )

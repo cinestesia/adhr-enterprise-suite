@@ -2,41 +2,40 @@ import fp from 'fastify-plugin'
 import { FastifyInstance } from 'fastify'
 
 // ─── 1. SHARED / CORE INFRASTRUCTURE ─────────────────────────────────
-import { createDbClient } from '@/infrastructure/db'
-import { LocalStorageAdapter } from '@/infrastructure/storage/local-storage.adapter'
+import { LocalStorageAdapter } from '@/modules/shared/infrastructure/storage/local-storage.adapter'
 
 // ─── 2. FEATURE: KNOWLEDGE INGESTION & RAG ───────────────────────────
 import { IngestController } from '@/presentation/http/controllers/ingest.controller'
-import { IngestFileUseCase } from '@/application/use-cases/ingest-file.use-case'
-import { RagService } from '@/application/services/rag.service'
-import { PgVectorAdapter } from '@/infrastructure/ai/pg-vector.adapter'
+import { IngestFileUseCase } from '@/modules/shared/application/use-cases/ingest-file.use-case'
+import { RagService } from '@/modules/chat/application/services/rag.service'
+import { PgRagKnowledgeBaseAdapter } from '@/modules/shared/infrastructure/ai/pg-rag-knowledge-base.adapter'
 
 // ─── 3. FEATURE: RECRUITING & ATS ────────────────────────────────────
 import { RecruitingController } from '../controllers/recruiting.controller'
-import { ParseCvUseCase } from '@/application/use-cases/parse-cv.use-case'
-import { DocumentParserService } from '@/application/services/document-parser.service'
-import { OllamaCvExtractorAdapter } from '@/infrastructure/ai/ollama-cv-extractor.adapter'
-import { PgCandidateAdapter } from '@/infrastructure/db/pg-candidate.adapter'
 
 // ─── 4. FEATURE: CHAT & AI AGENT SYSTEM ──────────────────────────────
 import { ChatController } from '@/presentation/http/controllers/chat.controller'
-import { GetChatHistoryUseCase } from '@/application/use-cases/get-chat-history.use-case'
-import { GetUserSessionsUseCase } from '@/application/use-cases/get-user-sessions.use-case'
-import { SessionService } from '@/application/services/session.service'
-import { ChatStreamService } from '@/application/services/chat-stream.service'
-import { PromptBuilder } from '@/application/services/prompt-builder.service'
-import { QueryAnalyzerService } from '@/application/services/query-analyzer.service'
-import { PgChatAdapter } from '@/infrastructure/db/pg-chat.adapter'
-import { PgCorporateAdapter } from '@/infrastructure/db/pg-corporate.adapter'
-import { OllamaAgentAdapter } from '@/infrastructure/ai/agent/ollama-agent.adapter'
-import { SearchFaqsTool } from '@/infrastructure/ai/agent/tools/search-faqs.tool'
-import { QueryCorporateDbTool } from '@/infrastructure/ai/agent/tools/query-corporate-db.tool'
-import { ITool } from '@/domain/ports/tool.port'
-import { OllamaAdapter } from '@/infrastructure/ai/ollama.adapter'
-import { ChatUseCase } from '@/application/use-cases/chat.use-case'
-import { PinoLoggerAdapter } from '@/infrastructure/logger/pino-logger.adapter'
-import { OllamaCvExtractorStreamingAdapter } from '@/infrastructure/ai/ollama-cv-extractor-streaming.adapter'
-import { ParseCvStreamingUseCase } from '@/application/use-cases/parse-cv-streaming.use-case'
+import { GetChatHistoryUseCase } from '@/modules/chat/application/use-cases/get-chat-history.use-case'
+import { GetUserSessionsUseCase } from '@/modules/chat/application/use-cases/get-user-sessions.use-case'
+import { SessionService } from '@/modules/chat/application/services/session.service'
+import { ChatStreamService } from '@/modules/chat/application/services/chat-stream.service'
+import { PromptBuilder } from '@/modules/chat/application/services/prompt-builder.service'
+import { QueryAnalyzerService } from '@/modules/chat/application/services/query-analyzer.service'
+import { PgCorporateAdapter } from '@/modules/shared/infrastructure/db/pg-corporate.adapter'
+import { OllamaAgentAdapter } from '@/modules/chat/infrastructure/ollama-agent.adapter'
+import { SearchFaqsTool } from '@/modules/chat/infrastructure/tools/search-faqs.tool'
+import { QueryCorporateDbTool } from '@/modules/chat/infrastructure/tools/query-corporate-db.tool'
+import { IToolPort } from '@/modules/shared/domain/ports/tool.port'
+import { ChatUseCase } from '@/modules/chat/application/use-cases/chat.use-case'
+import { PinoLoggerAdapter } from '@/modules/shared/infrastructure/logger/pino-logger.adapter'
+import { OllamaCvExtractorStreamingAdapter } from '@/modules/recruiting/infrastructure/ollama-cv-extractor-streaming.adapter'
+import { createDbClient } from '@/modules/shared/infrastructure/db'
+import { ParseCvStreamingUseCase } from '@/modules/recruiting/application/use-cases/parse-cv-streaming.use-case'
+import { LocalDocumentParserAdapter } from '@/modules/shared/infrastructure/parsers/local-document-parser.adapter'
+import { OllamaAiGatewayAdapter } from '@/modules/chat/infrastructure/ollama-ai-gateway.adapter'
+import { PgCandidateRepositoryAdapter } from '@/modules/recruiting/infrastructure/pg-candidate-repository.adapter'
+import { PgChatRepositoryAdapter } from '@/modules/chat/infrastructure/pg-chat-repository.adapter'
+import { OllamaEmbeddingsAdapter } from '@/modules/shared/infrastructure/ai/ollama-embeddings.adapter'
 
 export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     // 🟪 1. SHARED / CORE INFRASTRUCTURE
@@ -44,23 +43,23 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     const dbClient = createDbClient(process.env.DATABASE_URL!)
     const corporateDbClient = createDbClient(process.env.CORPORATE_DATABASE_URL!)
     const storageAdapter = new LocalStorageAdapter()
-    const aiAdapter = new OllamaAdapter()
+    const aiAdapter = new OllamaAiGatewayAdapter
+    const embeddingsAdapter = new OllamaEmbeddingsAdapter()
 
     // 🟦 2. FEATURE: KNOWLEDGE INGESTION & RAG
     // ─────────────────────────────────────────────────────────────────
-    const vectorDbAdapter = new PgVectorAdapter(aiAdapter, dbClient)
-    const ragService = new RagService(vectorDbAdapter)
-
-    const ingestFileUseCase = new IngestFileUseCase(storageAdapter, vectorDbAdapter)
+    const knowledgeBaseAdapter = new PgRagKnowledgeBaseAdapter(embeddingsAdapter, dbClient)
+    const ragService = new RagService(knowledgeBaseAdapter)
+    const ingestFileUseCase = new IngestFileUseCase(storageAdapter, knowledgeBaseAdapter)
     const ingestController = new IngestController(ingestFileUseCase)
 
     // 🟩 3. FEATURE: RECRUITING & ATS
     // ─────────────────────────────────────────────────────────────────
-    const documentParser = new DocumentParserService()
+    const documentParser = new LocalDocumentParserAdapter()
     //const cvExtractor = new OllamaCvExtractorAdapter()
     const cvExtractor = new OllamaCvExtractorStreamingAdapter()
 
-    const candidateRepo = new PgCandidateAdapter(dbClient)
+    const candidateRepo = new PgCandidateRepositoryAdapter(dbClient, embeddingsAdapter)
     const loggerAdapter = new PinoLoggerAdapter(fastify.log)
 
     // const parseCvUseCase = new ParseCvUseCase(cvExtractor, candidateRepo, storageAdapter, documentParser,loggerAdapter )
@@ -78,7 +77,7 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     // 🟧 4. FEATURE: CHAT & AI AGENT SYSTEM
     // ─────────────────────────────────────────────────────────────────
     // Repositories & Servizi Core della Chat
-    const chatRepo = new PgChatAdapter(dbClient)
+    const chatRepo = new PgChatRepositoryAdapter(dbClient)
     const corporateRepo = new PgCorporateAdapter(corporateDbClient)
     const sessionService = new SessionService(chatRepo, aiAdapter)
     const promptBuilder = new PromptBuilder()
@@ -87,25 +86,27 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
 
     // Agent Tools Setup
     const searchFaqsTool = new SearchFaqsTool(ragService)
+    
     const queryCorporateDbTool = new QueryCorporateDbTool(corporateRepo)
 
-    const itAgentTools = new Map<string, ITool>([
+    const itAgentTools = new Map<string, IToolPort>([
         [searchFaqsTool.specification.name, searchFaqsTool],
         [queryCorporateDbTool.specification.name, queryCorporateDbTool],
     ])
 
-    const recruitingAgentTools = new Map<string, ITool>([
-        [searchFaqsTool.specification.name, searchFaqsTool],
-        // [extractCvTool.specification.name, extractCvTool],
-    ])
+    // const recruitingAgentTools = new Map<string, IToolPort>([
+    //     [searchFaqsTool.specification.name, searchFaqsTool],
+    //     // [extractCvTool.specification.name, extractCvTool],
+    // ])
 
     // Agents Verticali
     const itAgent = new OllamaAgentAdapter(itAgentTools)
-    const recruitingAgent = new OllamaAgentAdapter(recruitingAgentTools)
+    
+    //const recruitingAgent = new OllamaAgentAdapter(recruitingAgentTools)
 
     const agentRegistry = new Map<string, any>([
         ['itAgent', itAgent],
-        ['recruitingAgent', recruitingAgent],
+        // ['recruitingAgent', recruitingAgent],
     ])
 
     // Use Cases & Controller Chat

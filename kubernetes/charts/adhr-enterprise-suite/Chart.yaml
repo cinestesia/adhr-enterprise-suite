@@ -1,12 +1,73 @@
-# COMANDO:
 
-#   helm install welcome-backend
-#   ./kubernetes/charts/adhr-enterprise-suite -n development
-#   -f ./kubernetes/env/local/welcome-backend.yaml
+# NOTA: con helm installiamo solo welcome-frontend e ai-backend. Keycloack è installato a parte 
+# tramite un suo proprio file yaml. 
 
-# helm install <NOME>: Serve a Kubernetes per dare un nome univoco
-# ai tuoi oggetti relativi a questa app: (Pod, Service, Ingress) nel cluster.
-# Questo valore viene passato nei template come {{ .Release.Name }}
+# helm è solo un tool per generare i file yaml di Kubernetes, e per installarli.
+# sotto il cofano utilizza i template per generare i file yaml, e poi li installa con kubectl.
+# In questo modo possiamo installare / aggiornare i vari componenti della nostra app con un 
+# comado. Ad esempio dando questo comando: 
+
+# helm upgrade --install welcome-frontend ./kubernetes/charts/adhr-enterprise-suite \ 
+# -f ./kubernetes/env/aks-azure-dev/welcome-frontend.yaml \
+# --namespace development \
+# --set image.repository=adhresregistry.azurecr.io/welcome-frontend \ <== Inietta a volo valori nel template. 
+# --set image.tag=${{ github.sha }} \
+# --set env.ENVIRONMENT="development" \
+# --set env.AUTH_KEYCLOAK_ID="welcome-app" \
+# --set env.AUTH_KEYCLOAK_ISSUER="http://auth.4.232.3.98.nip.io/realms/internal-adhr" \
+# --set env.AUTH_URL="http://welcome.4.232.3.98.nip.io" \
+# --set env.AUTH_TRUST_HOST="true" \
+# --set env.NEXTAUTH_URL="http://welcome.4.232.3.98.nip.io" \
+# --set env.NEXT_PUBLIC_NODE_ENV="development" \
+# --set env.API_BACKEND_URL="http://ai-backend.development.svc.cluster.local" \
+# --set env.NODE_OPTIONS="--dns-result-order=ipv4first" \
+# --set secretEnv.AUTH_KEYCLOAK_SECRET="${{ secrets.WELCOME_KEYCLOAK_SECRET }}" \
+# --set secretEnv.AUTH_SECRET="${{ secrets.WELCOME_AUTH_SECRET }}" \
+# --history-max 2 # Mantieni solo le ultime 2 release per risparmiare spazio su cluster
+
+
+# helm inizia a creare il file deldeployment yaml 
+# partendo da Chart.yaml dentro la cartella adhr-enterprise-suite, per poi integrarlo con 
+# i templates dentro la cartella templates, e infine lo installa con (kubectl o parlando direttamente con API DI KUBERNETES).
+
+# Come vediamo durante l'esecuzione del comando possiamo passare con -f i file di configurazione, 
+# che contengono i valori specifici per l'ambiente di destinazione ( development, staging, production). 
+# In questo modo possiamo mantenere un unico template per tutti gli ambienti, 
+# e passare i valori specifici tramite i file di configurazione.
+
+# I valori iniettati nel template con --set sono utili per sovrascrivere i valori di default, o 
+# per passare valori dinamici nel momento del lancio del comando. I valorid passati seguono la seguente
+# gerarchia di priorità (dal più basso al più alto):
+
+# 1.  values.yaml (Dentro la cartella del Chart): Sono i valori di default, la base.
+
+# 2.  File d'ambiente con -f (es. welcome-frontend.yaml): Sovrascrivono i default del punto 1 
+#     per uno specifico ambiente (dev, prod).
+
+# 3.  Il flag --set: Ha la priorità massima assoluta. Sovrascrive sia il values.yaml sia i file passati con -f. 
+#     È pensato proprio per valori dinamici che cambiano a ogni build (come il tag dell'immagine o i segreti della CI/CD).
+
+# --set image.repository riempie nei template il valore {{ .Values.image.repository }}
+# --set image.tag riempie nei template il valore {{ .Values.image.tag }} 
+# ecc.. 
+
+# invece per tutte le variabili d'ambiente --set env.x  sono lette tramite range oppure una alla volta. 
+
+# env:
+#   - name: ENVIRONMENT
+#     value: "{{ .Values.env.ENVIRONMENT }}"
+#   - name: AUTH_KEYCLOAK_ID
+#     value: "{{ .Values.env.AUTH_KEYCLOAK_ID }}"
+# ecc.. 
+
+# Le variabili d'ambiente saranno disponibili tramite il deployment yaml dentro ogno container 
+# e potranno essere lette dall'applicazione. In questo modo possiamo passare valori dinamici a runtime,
+
+# Il pattern:
+# Il flag --set livello1.livello2="valore" Diventa nel template => {{ .Values.livello1.livello2 }}
+# Esempio Chiave:--set env.API_BACKEND_URL="..." => {{ .Values.env.API_BACKEND_URL }}
+
+
 
 apiVersion: v2 # versione dell'API di Kubernetes
 
@@ -15,8 +76,6 @@ apiVersion: v2 # versione dell'API di Kubernetes
 # per cercarli:
 # helm list -n development
 # kubectl describe pod <nome-pod> -n development | grep helm.sh/chart
-# NAME                NAMESPACE  	REVISION	UPDATED                                	STATUS  	CHART                      	APP VERSION
-# welcome-backend	development	2       	2026-02-28 10:37:22.536429397 +0100 CET	deployed	adhr-enterprise-suite-0.1.0	2.4.5
 
 name: adhr-enterprise-suite
 

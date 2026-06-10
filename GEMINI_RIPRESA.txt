@@ -1,0 +1,56 @@
+La tua intuizione architettonica è straordinariamente corretta: grazie a DDD, introdurre LangGraph sarà pulito e isolato come aggiungere un nuovo Use Case (Application Service). In un'architettura Domain-Driven Design ben strutturata, LangGraph non deve inquinare l'infrastruttura o il core del dominio. Il grafo si posiziona interamente nel Layer Application: funge da orchestratore del flusso. Lo State del grafo rappresenta lo stato transitorio del caso d'uso, mentre i singoli Nodes (i nodi del grafo) non fanno altro che richiamare i tuoi Domain Services, i tuoi Repositories o i tuoi Infrastructure Gateways (come il client di Ollama o il Vector DB).
+
+Ecco la scaletta operativa definitiva strutturata per passi incrementali. Ogni passo è auto-conclusivo, riduce il rischio di regressioni e ti permette di testare l'avanzamento un pezzo alla volta.
+
+📅 LA SCALETTA OPERATIVA: ROADMAP DI IMPLEMENTAZIONE
+🛠️ STEP 1: Blindaggio del Parser & JSON Mode (Backend)
+L'obiettivo è garantire che il primo tassello della catena sia deterministico al 100%.
+
+Cosa faremo: Creazione dell'Application Service per il parsing grezzo dei PDF. Configureremo il prompt di sistema su Ollama forzando la JSON Mode (usando modelli stabili come Llama 3.1 o Mistral).
+
+Deliverable: Un endpoint/servizio che, dato un file, restituisce un JSON strutturato che mappa perfettamente l'interfaccia TypeScript ExtractedCvData usata dal tuo frontend, gestendo gli errori di formattazione dell'LLM in modo resiliente.
+
+🔍 STEP 2: Il Cervello di Ricerca (Vector DB & Embeddings)
+L'obiettivo è rendere i dati estratti immediatamente indicizzabili e ricercabili semanticamente.
+
+Cosa faremo: Configurazione del modello di embedding su Ollama (es. nomic-embed-text). Se utilizzi PostgreSQL nel tuo stack, implementeremo l'estensione pgvector direttamente sul database esistente creando la tabella degli embeddings dei candidati. Scriveremo il Domain Service CvSearchService con il calcolo della similarità del coseno.
+
+Deliverable: Una funzione di ricerca interna capace di prendere una query testuale del recruiter ("Sviluppatore senior TypeScript con conoscenza di Docker"), convertirla in vettore e restituire i CV più affini estratti dal DB.
+
+🌿 STEP 3: Architettura del Grafo con LangGraph (Il Cacciatore)
+L'obiettivo è implementare la logica agentica non lineare e la memoria persistente del flusso di recruiting.
+
+Cosa faremo: Definizione dello StateGraph di LangGraph. Mappiamo i tre nodi core:
+
+Nodo Parser: (Sfrutta lo Step 1).
+
+Nodo Evaluator/Matcher: Confronta il profilo con la Job Description e valuta i gap di competenze.
+
+Nodo Conditional Router: Se lo score è alto ma mancano dati cruciali (es. l'esperienza React), devia lo stato su un punto di interruzione.
+
+Integrazione Memoria (Checkpointers): Implementeremo un checkpointer persistente per salvare lo stato del grafo sul DB. Questo permetterà il meccanismo di Human-in-the-loop: il grafo si "congela" in attesa delle info mancanti e si risveglia dallo stesso identico punto quando arrivano.
+
+Deliverable: La pipeline agentica funzionante a livello logico isolato (superficie di test superata tramite script o unit test).
+
+📥 STEP 4: Asincronia e Protezione GPU (Code di Lavoro)
+L'obiettivo è proteggere la tua singola macchina con Ollama dai picchi di carico quando vengono caricati molti file.
+
+Cosa faremo: Introduzione di un sistema di code (es. BullMQ se sei in ambiente Node/TypeScript o una coda gestita transazionale su DB). Quando il frontend invia un pacchetto di CV, il BFF non avvia subito LangGraph; salva i file, genera i record nello stato processing e inserisce i task nella coda. Un worker gestirà l'esecuzione dei grafi di LangGraph uno (o due) alla volta in background, massimizzando l'efficienza della GPU.
+
+Deliverable: Sistema totalmente asincrono. Il server accetta 50 CV in un secondo, l'utente vede la UI reattiva, e la GPU lavora linearmente senza saturarsi.
+
+📺 STEP 5: Chiusura del Cerchio (Integrazione Frontend in Real-time)
+L'obiettivo è collegare i worker in background alla bellissima interfaccia grafica che abbiamo rifinito.
+
+Cosa faremo: Implementazione di un canale di comunicazione bidirezionale (WebSockets o Server-Sent Events) tra il backend e il frontend Next.js. Man mano che i worker della coda completano i nodi del grafo LangGraph per un determinato file, inviano l'evento di avanzamento (stage_progress, status_change).
+
+Deliverable: La barra di avanzamento globale e i singoli badge di stato della tua sidebar si aggiornano dinamicamente sotto gli occhi del recruiter, fino alla comparsa dei moduli compilati dei candidati.
+
+🚀 IL PIANO PER I PROSSIMI GIORNI
+Visto che ti prenderai un paio di giorni di pausa prima di battere il primo colpo di tastiera, ti consiglio di strutturare l'avvio così:
+
+Giorno 1 (Alla ripresa): Ci focalizziamo interamente sullo STEP 1. Creiamo lo schema DTO/TypeScript esatto dei dati che desideri estrarre dai CV e scriviamo il servizio Fastify che interroga Ollama in JSON Mode, testandolo con i file reali di prova che abbiamo visto nella sidebar (come quelli di cv-prova/).
+
+Giorno 2: Passeremo allo STEP 2 (Embedding e persistenza su DB) per chiudere la parte dati prima di agganciare il motore a stati di LangGraph.
+
+Riposati, cancella i token mentali accumulati con il CSS e il Flexbox in queste sessioni. Quando sei pronto a partire con lo Step 1 sul Backend, fammi un fischio e buttiamo giù il codice del primo Use Case!

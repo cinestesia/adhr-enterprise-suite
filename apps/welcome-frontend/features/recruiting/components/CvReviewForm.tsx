@@ -214,7 +214,7 @@ export function CvReviewForm({ data, onSave }: CvReviewFormProps) {
       <div className="bg-white rounded-xl border border-zinc-100 p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-50 pb-3">
           <div className="flex items-center gap-2">
-            <GraduationCap className="size-5 text-red-600" />
+            <GraduationCap className="size-5 text-primary" />
             <h3 className="font-bold text-sm text-zinc-900 uppercase tracking-wider">
               Istruzione e Formazione
             </h3>

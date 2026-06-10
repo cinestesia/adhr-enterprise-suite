@@ -25,42 +25,52 @@ export function AtsContainer() {
   const [batchFiles, setBatchFiles] = useState<CandidateFileBatch[]>([])
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
+  /**
+   * Questo hook gestisce l'intero ciclo di vita del batch di file caricati,
+   * inclusi gli aggiornamenti di stato, le comunicazioni con il backend e il progresso globale.
+   */
   const { globalProgress } = useRecruitingBatch(batchFiles, setBatchFiles)
 
-  const currentSelectedFile = useMemo(() => 
-    batchFiles.find((f) => f.id === selectedFileId),
+  const currentSelectedFile = useMemo(
+    () => batchFiles.find((f) => f.id === selectedFileId),
     [batchFiles, selectedFileId]
   )
 
-  const handleFilesSelected = useCallback((files: File[]) => {
-    const newItems: CandidateFileBatch[] = files.map((file, index) => ({
-      id: `${file.name}-${Date.now()}-${index}`,
-      fileName: file.name,
-      fileObject: file,
-      status: 'idle',
-      fileProgress: 0,
-    }))
+  const handleFilesSelected = useCallback(
+    (files: File[]) => {
+      const newItems: CandidateFileBatch[] = files.map((file, index) => ({
+        id: `${file.name}-${Date.now()}-${index}`,
+        fileName: file.name,
+        fileObject: file,
+        status: 'idle',
+        fileProgress: 0,
+      }))
 
-    setBatchFiles((prev) => [...prev, ...newItems])
-    if (!selectedFileId && newItems.length > 0) {
-      setSelectedFileId(newItems[0].id)
-    }
-  }, [selectedFileId])
+      setBatchFiles((prev) => [...prev, ...newItems])
+      if (!selectedFileId && newItems.length > 0) {
+        setSelectedFileId(newItems[0].id)
+      }
+    },
+    [selectedFileId]
+  )
 
-  const handleConfirmSave = useCallback(async (updatedData: ExtractedCvData) => {
-    if (!currentSelectedFile) return
+  const handleConfirmSave = useCallback(
+    async (updatedData: ExtractedCvData) => {
+      if (!currentSelectedFile) return
 
-    try {
-      await confirmCandidate(updatedData, currentSelectedFile.fileName)
-      setBatchFiles((prev) => {
-        const updated = prev.filter((f) => f.id !== currentSelectedFile.id)
-        setSelectedFileId(updated.length > 0 ? updated[0].id : null)
-        return updated
-      })
-    } catch (err: any) {
-      alert(`Errore durante il salvataggio: ${err.message}`)
-    }
-  }, [currentSelectedFile])
+      try {
+        await confirmCandidate(updatedData, currentSelectedFile.fileName)
+        setBatchFiles((prev) => {
+          const updated = prev.filter((f) => f.id !== currentSelectedFile.id)
+          setSelectedFileId(updated.length > 0 ? updated[0].id : null)
+          return updated
+        })
+      } catch (err: any) {
+        alert(`Errore durante il salvataggio: ${err.message}`)
+      }
+    },
+    [currentSelectedFile]
+  )
 
   const getFileStatusLabel = useCallback((file: CandidateFileBatch) => {
     if (file.status === 'idle') return 'In coda...'
@@ -78,9 +88,8 @@ export function AtsContainer() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
-      
       {/* SIDEBAR SINISTRA CON RIEPILOGO CV E STATISTICHE */}
-      <AtsSidebar 
+      <AtsSidebar
         batchFiles={batchFiles}
         selectedFileId={selectedFileId}
         globalProgress={globalProgress}
@@ -93,15 +102,23 @@ export function AtsContainer() {
         {currentSelectedFile ? (
           <div className="space-y-6">
             <div className="border-b border-zinc-100 pb-4">
-              <h2 className="text-base font-bold text-adhr-zinc-strong uppercase tracking-wider">Verifica Dati Semantici</h2>
+              <h2 className="text-base font-bold text-adhr-zinc-strong uppercase tracking-wider">
+                Verifica Dati Semantici
+              </h2>
               <p className="text-xs text-adhr-zinc-light mt-1">
-                File sorgente: <span className="font-mono text-primary font-medium">{currentSelectedFile.fileName}</span>
+                File sorgente:{' '}
+                <span className="font-mono text-primary font-medium">
+                  {currentSelectedFile.fileName}
+                </span>
               </p>
             </div>
 
             {/* Stati di rendering isolati */}
             {currentSelectedFile.status === 'processing' && (
-              <AtsLoadingState stage={currentSelectedFile.stage} progress={currentSelectedFile.fileProgress || 0} />
+              <AtsLoadingState
+                stage={currentSelectedFile.stage}
+                progress={currentSelectedFile.fileProgress || 0}
+              />
             )}
 
             {currentSelectedFile.status === 'error' && (
@@ -114,14 +131,20 @@ export function AtsContainer() {
               </div>
             )}
 
-            {currentSelectedFile.status === 'success' && currentSelectedFile.extractedData && (
-              <CvReviewForm data={currentSelectedFile.extractedData} onSave={handleConfirmSave} />
-            )}
+            {currentSelectedFile.status === 'success' &&
+              currentSelectedFile.extractedData && (
+                <CvReviewForm
+                  data={currentSelectedFile.extractedData}
+                  onSave={handleConfirmSave}
+                />
+              )}
 
             {currentSelectedFile.status === 'idle' && (
               <div className="py-16 text-center space-y-2">
                 <Loader2 className="size-5 text-adhr-zinc-light animate-spin mx-auto opacity-40" />
-                <p className="text-xs text-adhr-zinc-light italic">In coda di pianificazione...</p>
+                <p className="text-xs text-adhr-zinc-light italic">
+                  In coda di pianificazione...
+                </p>
               </div>
             )}
           </div>

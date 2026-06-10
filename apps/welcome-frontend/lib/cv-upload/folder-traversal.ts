@@ -10,8 +10,8 @@ import { validateFile, LIMITS } from './validators'
 // ─── Tipi pubblici ───────────────────────────────────────────────────────────
 
 export type TraversalResult = {
-  files:    File[]
-  skipped:  number   // file ignorati per formato o dimensione
+    files: File[]
+    skipped: number // file ignorati per formato o dimensione
 }
 
 // ─── Implementazione ─────────────────────────────────────────────────────────
@@ -26,45 +26,44 @@ export type TraversalResult = {
  * @param accumulator - Stato accumulato della traversal (uso interno)
  */
 export async function traverseFileTree(
-  entry:       FileSystemEntry,
-  accumulator: TraversalResult = { files: [], skipped: 0 },
+    entry: FileSystemEntry,
+    accumulator: TraversalResult = { files: [], skipped: 0 }
 ): Promise<TraversalResult> {
-  if (accumulator.files.length >= LIMITS.MAX_TOTAL_FILES) return accumulator
+    if (accumulator.files.length >= LIMITS.MAX_TOTAL_FILES) return accumulator
 
-  if (entry.isFile) {
-    const file = await getFile(entry as FileSystemFileEntry)
-    const validation = validateFile(file)
+    if (entry.isFile) {
+        const file = await getFile(entry as FileSystemFileEntry)
+        const validation = validateFile(file)
 
-    if (validation.ok) {
-      accumulator.files.push(file)
-    } else {
-      accumulator.skipped++
+        if (validation.ok) {
+            accumulator.files.push(file)
+        } else {
+            accumulator.skipped++
+        }
+    } else if (entry.isDirectory) {
+        const dirEntry = entry as FileSystemDirectoryEntry
+        const dirReader = dirEntry.createReader()
+
+        // Legge tutti i batch (readEntries è limitata a ~100 item per chiamata)
+        let batch: FileSystemEntry[]
+        do {
+            batch = await readEntries(dirReader)
+            for (const innerEntry of batch) {
+                if (accumulator.files.length >= LIMITS.MAX_TOTAL_FILES) break
+                await traverseFileTree(innerEntry, accumulator)
+            }
+        } while (batch.length > 0 && accumulator.files.length < LIMITS.MAX_TOTAL_FILES)
     }
 
-  } else if (entry.isDirectory) {
-    const dirEntry  = entry as FileSystemDirectoryEntry
-    const dirReader = dirEntry.createReader()
-
-    // Legge tutti i batch (readEntries è limitata a ~100 item per chiamata)
-    let batch: FileSystemEntry[]
-    do {
-      batch = await readEntries(dirReader)
-      for (const innerEntry of batch) {
-        if (accumulator.files.length >= LIMITS.MAX_TOTAL_FILES) break
-        await traverseFileTree(innerEntry, accumulator)
-      }
-    } while (batch.length > 0 && accumulator.files.length < LIMITS.MAX_TOTAL_FILES)
-  }
-
-  return accumulator
+    return accumulator
 }
 
 // ─── Helpers privati ─────────────────────────────────────────────────────────
 
 function getFile(entry: FileSystemFileEntry): Promise<File> {
-  return new Promise((resolve, reject) => entry.file(resolve, reject))
+    return new Promise((resolve, reject) => entry.file(resolve, reject))
 }
 
 function readEntries(reader: FileSystemDirectoryReader): Promise<FileSystemEntry[]> {
-  return new Promise((resolve, reject) => reader.readEntries(resolve, reject))
+    return new Promise((resolve, reject) => reader.readEntries(resolve, reject))
 }

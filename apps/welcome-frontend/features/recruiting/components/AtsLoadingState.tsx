@@ -16,11 +16,14 @@ export function AtsLoadingState({ stage, progress }: AtsLoadingStateProps) {
       <div className="space-y-1.5">
         <p className="text-sm font-semibold text-adhr-zinc-strong">
           {stage === 'parsing_file' && 'Lettura e Parsing del documento originale...'}
-          {stage === 'llm_inference' && "L'Intelligenza Semantica sta analizzando il testo..."}
-          {stage === 'receiving_data' && 'Strutturazione dei campi anagrafici e professionali...'}
+          {stage === 'llm_inference' &&
+            "L'Intelligenza Semantica sta analizzando il testo..."}
+          {stage === 'receiving_data' &&
+            'Strutturazione dei campi anagrafici e professionali...'}
         </p>
         <p className="text-xs text-adhr-zinc-light">
-          {stage === 'llm_inference' && "L'elaborazione su modelli locali ottimizza la privacy ma richiede computazione."}
+          {stage === 'llm_inference' &&
+            "L'elaborazione su modelli locali ottimizza la privacy ma richiede computazione."}
           {stage === 'parsing_file' && 'Estrazione del testo dal file.'}
         </p>
       </div>

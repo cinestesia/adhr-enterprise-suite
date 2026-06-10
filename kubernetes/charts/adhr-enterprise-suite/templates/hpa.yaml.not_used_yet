@@ -1,0 +1,27 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: welcome-frontend-hpa
+  namespace: development
+spec:
+  # 1. IL COINVOLTO: Chi devo controllare?
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: welcome-frontend
+
+  # 2. I LIMITI: Il range di Pod entro cui muoversi
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+
+  # 3. LA VALVOLA DI SFOGO: Quando devo iniziare a scalare?
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.targetCPU }}
+
+
+# Chi comanda le decisioni? (I tre parametri chiave)Come vedi dal template, le tre decisioni fondamentali le passi tramite il file values.yaml o tramite i file d'ambiente (-f):minReplicas (es. 2): È il numero minimo di Pod che vuoi sempre attivi in tempi di pace per garantire l'alta affidabilità (anche se la CPU è allo 0%).maxReplicas (es. 10): È il tetto massimo. Anche se il server sta esplodendo, l'HPA non creerà mai un 11° Pod. Questo serve a proteggerti da costi fuori controllo o dal mandare in crash il database a causa di troppe connessioni simultanee.averageUtilization (es. 70): È la soglia espressa in percentuale. Dice: "Prendi la media del consumo di CPU di tutti i Pod attivi del frontend. Se questa media supera il 70%, attiva l'algoritmo matematico di scaling per calcolare quanti nuovi Pod servono".Come ragiona l'HPA sotto il cofano? (La formula matematica)L'HPA non va a tentativi. Nel Control Plane c'è un controllore specifico (dentro il Controller Manager) che ogni 15 secondi interroga un componente del cluster chiamato Metrics Server (che raccoglie i dati sui consumi di CPU/RAM inviati dalle Kubelet).L'HPA applica questa formula matematica precisa:$$\text{Numero Repliche Desiderate} = \lceil \text{Numero Repliche Attuali} \times \left( \frac{\text{CPU Attuale}}{\text{CPU Desiderata}} \right) \rceil$$Esempio Pratico:Hai 2 Pod attivi.C'è un picco di traffico e la media della CPU dei due Pod vola al 140%.La tua soglia desiderata impostata nell'HPA è 70%.Calcolo: $2 \times (\frac{140}{70}) = 2 \times 2 = 4$.L'HPA ordina istantaneamente all'API Server di aggiornare il Deployment portando il numero di Pod da 2 a 4.Come integrarlo nei tuoi appunti:Sotto il capitolo # Come funziona l'Autoscaling, puoi aggiungere questa sezione:"### Chi definisce i limiti dell'HPA?I limiti di scalabilità dei Pod vengono decisi dallo sviluppatore tramite un file di configurazione Kubernetes di tipo HorizontalPodAutoscaler. In questo file si aggancia un Deployment specifico e si definiscono tre regole:minReplicas: Il numero base di Pod sempre attivi.maxReplicas: Il tetto massimo di Pod per bloccare il consumo di risorse ed evitare costi folli.metrics: La metrica di scatto (es. media CPU > 70%).Nel nostro flusso CI/CD con Helm, questi tre numeri non sono hardcoded, ma vengono definiti nel file di ambiente (es. in aks-azure-dev/welcome-frontend.yaml metteremo un range ridotto come 1-3 Pod per risparmiare risorse, mentre in un file di produzione metteremo limiti più alti come 2-10 Pod)."
