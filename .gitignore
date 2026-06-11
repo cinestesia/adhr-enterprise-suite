@@ -52,3 +52,7 @@ yarn-error.log*
 # Se usi pacchetti helm locali o grafici generati
 /charts/*.tgz
 /charts/charts/
+
+# Certificati
+*.key
+*.crt

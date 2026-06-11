@@ -17,7 +17,7 @@ export default function LoginPage() {
         <p className="text-sm text-slate-500">
           Ti stiamo trasferendo al portale di accesso sicuro...
         </p>
-      </div>
+      </div> 
     </div>
   )
 }
