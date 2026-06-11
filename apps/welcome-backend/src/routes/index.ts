@@ -9,7 +9,7 @@ export default async function (fastify: FastifyInstance) {
             // Chiamata al service (Logica di business )
             return {
                 status: 'ok',
-                message: `Welcome backend ( ${process.env.NODE_ENV} ) is up and running!`,
+                message: `Welcome  backend ( ${process.env.NODE_ENV} ) is up and running!`,
             }
         },
     })
