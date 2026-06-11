@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   useEffect(() => {
-    // login automatico con Keycloak
+    // login automatico con Keycloak ok
     signIn('keycloak')
   }, [])
 
@@ -17,7 +17,7 @@ export default function LoginPage() {
         <p className="text-sm text-slate-500">
           Ti stiamo trasferendo al portale di accesso sicuro...
         </p>
-      </div> 
+      </div>  
     </div>
   )
 }
