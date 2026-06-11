@@ -8,8 +8,8 @@ import path from 'node:path'
 import { IKnowledgeBasePort } from '../../domain/ports/knowledge-base.port'
 
 export class IngestFileUseCase {
-    // In futuro si potrebbe spostare questa logica in un Domain Service
-    // ( es. DocumentParserService ) o in un adapter dedicato, per mantenere
+    // In futuro si potrebbe spostare questa logica in un Domain Service 
+    // ( ex. DocumentParserService ) o in un adapter dedicato, per mantenere
     // il Use Case focalizzato solo sull'orchestrazione. Per ora, tenerlo lì va bene,
     // ma occhio alla crescita.
 
