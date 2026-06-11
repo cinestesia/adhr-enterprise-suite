@@ -47,6 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.accessToken = account.access_token // <-- fondamentale per il backend
                 token.groups = (profile as any).groups || []
                 token.roles = (profile as any).realm_access?.roles || []
+                console.log("TOKEN", profile)
             }
 
             return token
