@@ -102,6 +102,7 @@ export class ParseCvUseCase {
             const fileUrl = await this.fileStorage.upload(fileInfo.buffer, fileInfo.name)
 
             console.log('[ParseCvUseCase] Scrittura anagrafica Candidate nel DB...')
+            
             const candidateEntity = new Candidate({
                 personalData: validatedData.personalData,
                 skills: validatedData.skills,
