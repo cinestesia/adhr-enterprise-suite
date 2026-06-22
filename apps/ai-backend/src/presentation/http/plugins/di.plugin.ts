@@ -36,6 +36,7 @@ import { OllamaAiGatewayAdapter } from '@/modules/chat/infrastructure/ollama-ai-
 import { PgCandidateRepositoryAdapter } from '@/modules/recruiting/infrastructure/pg-candidate-repository.adapter'
 import { PgChatRepositoryAdapter } from '@/modules/chat/infrastructure/pg-chat-repository.adapter'
 import { OllamaEmbeddingsAdapter } from '@/modules/shared/infrastructure/ai/ollama-embeddings.adapter'
+import { IAgentPort } from '@/modules/chat/domain/ports/agent.port'
 
 export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     // 🟪 1. SHARED / CORE INFRASTRUCTURE
@@ -43,12 +44,15 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
     const dbClient = createDbClient(process.env.DATABASE_URL!)
     const corporateDbClient = createDbClient(process.env.CORPORATE_DATABASE_URL!)
     const storageAdapter = new LocalStorageAdapter()
-    const aiAdapter = new OllamaAiGatewayAdapter
+    const aiAdapter = new OllamaAiGatewayAdapter()
     const embeddingsAdapter = new OllamaEmbeddingsAdapter()
 
     // 🟦 2. FEATURE: KNOWLEDGE INGESTION & RAG
     // ─────────────────────────────────────────────────────────────────
-    const knowledgeBaseAdapter = new PgRagKnowledgeBaseAdapter(embeddingsAdapter, dbClient)
+    const knowledgeBaseAdapter = new PgRagKnowledgeBaseAdapter(
+        embeddingsAdapter,
+        dbClient
+    )
     const ragService = new RagService(knowledgeBaseAdapter)
     const ingestFileUseCase = new IngestFileUseCase(storageAdapter, knowledgeBaseAdapter)
     const ingestController = new IngestController(ingestFileUseCase)
@@ -86,7 +90,7 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
 
     // Agent Tools Setup
     const searchFaqsTool = new SearchFaqsTool(ragService)
-    
+
     const queryCorporateDbTool = new QueryCorporateDbTool(corporateRepo)
 
     const itAgentTools = new Map<string, IToolPort>([
@@ -101,10 +105,10 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
 
     // Agents Verticali
     const itAgent = new OllamaAgentAdapter(itAgentTools)
-    
+
     //const recruitingAgent = new OllamaAgentAdapter(recruitingAgentTools)
 
-    const agentRegistry = new Map<string, any>([
+    const agentRegistry = new Map<string, IAgentPort>([
         ['itAgent', itAgent],
         // ['recruitingAgent', recruitingAgent],
     ])
@@ -118,7 +122,8 @@ export const diPlugin = fp(async function diPlugin(fastify: FastifyInstance) {
         chatRepo,
         aiAdapter,
         agentRegistry,
-        queryAnalyzerService
+        queryAnalyzerService,
+        loggerAdapter
     )
     const getChatHistoryUseCase = new GetChatHistoryUseCase(chatRepo)
     const getUserSessionsUseCase = new GetUserSessionsUseCase(chatRepo)

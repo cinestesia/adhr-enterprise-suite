@@ -6,10 +6,10 @@ import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import {
     jsonSchemaTransform,
-    serializerCompiler, 
+    serializerCompiler,
     validatorCompiler,
 } from 'fastify-type-provider-zod'
-
+// c
 import { diPlugin } from '@/presentation/http/plugins/di.plugin'
 import { chatRoutes } from '@/presentation/http/routes/chat.routes'
 import { healthRoutes } from '@/presentation/http/routes/health-routes'
@@ -132,7 +132,7 @@ const start = async () => {
         const host = app.config.HOST
 
         await app.listen({ port, host })
-        console.log('Config caricata:', app.config)
+        app.log.info(app.config)
         app.log.info(`🚀 ai-backend in ascolto su http://${host}:${port}`)
     } catch (err) {
         app.log.error(err)

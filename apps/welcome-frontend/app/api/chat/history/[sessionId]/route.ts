@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-
+// c
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ sessionId: string }> }
@@ -23,8 +23,8 @@ export async function GET(
 
         const data = await res.json()
         return NextResponse.json(data)
-    } catch (error) {
-        console.error('Error fetching history:', error)
+    } catch /*(error)*/ {
+        //console.error('Error fetching history:', error)
         return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 })
     }
 }

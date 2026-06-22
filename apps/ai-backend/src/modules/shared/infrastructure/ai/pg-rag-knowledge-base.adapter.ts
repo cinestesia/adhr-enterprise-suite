@@ -3,7 +3,10 @@ import { Document } from '@langchain/core/documents'
 import { documents, documentChunks } from '@/modules/shared/infrastructure/db/schema'
 import { sql, eq, ilike, and } from 'drizzle-orm'
 import { DbInstance } from '../db'
-import { IKnowledgeBasePort, KnowledgeBaseSearchResult } from '../../domain/ports/knowledge-base.port'
+import {
+    IKnowledgeBasePort,
+    KnowledgeBaseSearchResult,
+} from '../../domain/ports/knowledge-base.port'
 
 export class PgRagKnowledgeBaseAdapter implements IKnowledgeBasePort {
     constructor(
@@ -14,7 +17,6 @@ export class PgRagKnowledgeBaseAdapter implements IKnowledgeBasePort {
     async addDocument(chunks: Document[]): Promise<void> {
         const fileName = chunks[0].metadata.source
         const department = chunks[0].metadata.department
-
         await this.db.transaction(async (tx) => {
             const [doc] = await tx
                 .insert(documents)
@@ -123,7 +125,7 @@ export class PgRagKnowledgeBaseAdapter implements IKnowledgeBasePort {
         // 3. Mapping con cast a string per il content (risolve l'errore 4)
         return results.map((r) => ({
             content: r.content as string, // Cast esplicito da unknown a string
-            metadata: (r.metadata ?? {}) as Record<string, any>,
+            metadata: (r.metadata ?? {}) as Record<string, unknown>,
             similarity: Number(r.similarity ?? 0),
         }))
     }
@@ -148,15 +150,7 @@ export class PgRagKnowledgeBaseAdapter implements IKnowledgeBasePort {
         //    eliminerà istantaneamente tutti i chunk collegati nella tabella 'documents_chunks'
         try {
             await this.db.delete(documents).where(eq(documents.fileName, sourceName))
-
-            console.log(
-                `[PgVectorAdapter] Knowledge base ripulita per la sorgente: ${sourceName}`
-            )
-        } catch (error) {
-            console.error(
-                `[PgVectorAdapter] Errore durante la cancellazione di ${sourceName}:`,
-                error
-            )
+        } catch /*(error)*/ {
             throw new Error(`Impossibile eliminare la conoscenza per: ${sourceName}`)
         }
     }

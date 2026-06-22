@@ -10,6 +10,7 @@ import { QueryAnalyzerService } from '../services/query-analyzer.service'
 import { IterableReadableStream } from '@langchain/core/utils/stream'
 import { ChatRequestDTO } from '@/modules/chat/dtos/chat-request.dto'
 import { ToolExecutionContext } from '@/modules/shared/domain/models/agent.model'
+import { ILogger } from '@/modules/shared/domain/ports/logger.port'
 
 interface ChatUseCaseOutput {
     stream: IterableReadableStream<string>
@@ -17,6 +18,8 @@ interface ChatUseCaseOutput {
 }
 
 export class ChatUseCase {
+    private readonly context = 'ChatUseCase'
+
     constructor(
         private sessionService: SessionService,
         private ragService: RagService,
@@ -25,14 +28,14 @@ export class ChatUseCase {
         private chatRepo: IChatRepositoryPort,
         private aiGateway: IAiGatewayPort,
         private agentRegistry: Map<string, IAgentPort>,
-        private queryAnalyzer: QueryAnalyzerService
+        private queryAnalyzer: QueryAnalyzerService,
+        private logger: ILogger
     ) {}
 
     async execute(dto: ChatRequestDTO): Promise<ChatUseCaseOutput> {
         const { message, user, sessionId: providedId } = dto
 
         try {
-            
             const { session, isNew } = await this.sessionService.resolve(
                 providedId,
                 user.id,
@@ -42,13 +45,17 @@ export class ChatUseCase {
             // Carico la history , ultimi 10 messaggi per non appesantire troppo il prompt
             const history = await this.chatRepo.getMessagesBySessionId(session.id, 10)
 
-            // Genero un titolo senza attendere. 
+            // Genero un titolo senza attendere.
             if (isNew || history.length === 0) {
-                this.sessionService.generateTitleInBackground(
-                    session,
-                    user.id,
-                    message
-                )
+                this.sessionService.generateTitleInBackground(session, user.id, message)
+            }
+
+            // Creiamo un oggetto con i metadati base che vogliamo portarci dietro in TUTTI i log di questa esecuzione
+            const logMeta = {
+                context: this.context,
+                sessionId: session.id,
+                userId: user.id,
+                department: user.mainDepartment,
             }
 
             await this.chatRepo.saveMessage(session.id, new ChatMessage('user', message))
@@ -78,18 +85,26 @@ export class ChatUseCase {
              *
              */
 
-            console.log(
-                `[Router] Rotta Rilevata: ${analysis.route} | Query: ${analysis.optimizedQuery}`
-            )
+            this.logger.info("Routing completato dall'LLM Analyzer", {
+                ...logMeta,
+                action: 'QUERY_ROUTING',
+                route: analysis.route,
+                targetAgent: analysis.targetAgent,
+                optimizedQuery: analysis.optimizedQuery,
+            })
 
             /**
              * @note
              * LA ROTTA AGENTICA (Transazionale / Calcoli complessi)
              */
             if (analysis.route === 'AGENT') {
-                console.log(
-                    `[ChatUseCase] Attivazione Reparto Speciale: Avvio del Loop Agentico Cognitivo...`
-                )
+                const targetAgentName = analysis.targetAgent || 'itAgent'
+
+                this.logger.info('Attivazione loop agentico cognitivo', {
+                    ...logMeta,
+                    action: 'AGENT_EXECUTION',
+                    targetAgent: targetAgentName,
+                })
 
                 /**
                  * @note
@@ -107,7 +122,6 @@ export class ChatUseCase {
                  *
                  */
 
-                const targetAgentName = analysis.targetAgent || 'itAgent'
                 const selectedAgent = this.agentRegistry.get(targetAgentName)
 
                 if (!selectedAgent) {
@@ -163,28 +177,34 @@ export class ChatUseCase {
             // ────────────────────────────────────────────────────────
 
             let context: string | null = ''
-            
-            /** 
+
+            /**
              * @note
              * Se la rotta è RAG, devo recuperare il contesto rilevante dai miei documenti aziendali.
              * La funzione: getContext()
-             *  
-             * 1.   Applica i filtri: 
-             *      Prende il dipartimento dell'utente (es. "HR", "IT") 
-             *      e altri filtri dinamici (es. l'anno) per essere sicuro 
+             *
+             * 1.   Applica i filtri:
+             *      Prende il dipartimento dell'utente (es. "HR", "IT")
+             *      e altri filtri dinamici (es. l'anno) per essere sicuro
              *      che l'utente veda solo i documenti a cui ha diritto.
-             * 
-             * 2.   Interroga il DB (Similarity Search): Chiede all'adattatore di cercare nel database 
+             *
+             * 2.   Interroga il DB (Similarity Search): Chiede all'adattatore di cercare nel database
              *      i 4 frammenti (chunks) più simili alla domanda dell'utente.
-             * 
-             * Se i frammenti trovati hanno una similarità inferiore a 0.45 
-             * (cioè il DB ha trovato cose che non c'entrano nulla con la domanda), 
-             * il servizio scarta tutto e restituisce null. 
-             * 
+             *
+             * Se i frammenti trovati hanno una similarità inferiore a 0.45
+             * (cioè il DB ha trovato cose che non c'entrano nulla con la domanda),
+             * il servizio scarta tutto e restituisce null.
+             *
              * Questo evita che il bot riceva informazioni fuori tema e inizi ad allucinare.
              */
 
             if (analysis.route === 'RAG') {
+                this.logger.info('Esecuzione recupero contesto documentale (RAG)', {
+                    ...logMeta,
+                    action: 'RAG_RETRIEVAL',
+                    filters: analysis.filters,
+                })
+
                 context = await this.ragService.getContext(
                     analysis.optimizedQuery,
                     user.mainDepartment,
@@ -202,6 +222,12 @@ export class ChatUseCase {
                 ...history,
             ]
 
+            this.logger.info("Invio flusso di messaggi all'Ai Gateway", {
+                ...logMeta,
+                action: 'LLM_CHAT',
+                hasContext: !!context,
+            })
+
             const rawAiStream = await this.aiGateway.chat(message, augmentedHistory)
 
             return {
@@ -209,8 +235,19 @@ export class ChatUseCase {
                 sessionId: session.id,
             }
         } catch (error) {
-            console.error("[ChatUseCase] Errore critico durante l'esecuzione:", error)
-            throw error
+            this.logger.error(
+                "Errore critico durante l'esecuzione della chat",
+                error as Error,
+                {
+                    context: this.context,
+                    userId: user.id,
+                    providedSessionId: providedId,
+                }
+            )
+
+            throw new Error(
+                `Impossibile elaborare la richiesta di chat: ${(error as Error).message}`
+            )
         }
     }
 }

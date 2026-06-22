@@ -12,7 +12,7 @@ import fp from 'fastify-plugin'
 export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance) {
     const keycloakIssuer =
         process.env.KEYCLOAK_ISSUER ||
-        'http://auth.4.232.3.98.nip.io/realms/internal-adhr'
+        'https://auth.4.232.3.98.nip.io/realms/internal-adhr'
 
     // JWKS client per recuperare le chiavi pubbliche di Keycloak
     const client = jwksRsa({
@@ -43,10 +43,9 @@ export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance)
 
     // Registrazione del plugin JWT
     await fastify.register(fastifyJwt, {
-        secret: async (request: FastifyRequest, tokenOrPayload: string | object) => {
+        secret: async (request: FastifyRequest /**tokenOrPayload: string | object**/) => {
             // 1. Recuperiamo il token crudo dall'header Authorization
             // perché è lì che risiede il 'kid' nell'header del JWT
-            console.log('TOKEN OR PAYLOAD', tokenOrPayload)
             const authHeader = request.headers.authorization
             const rawToken = authHeader?.split(' ')[1]
 
@@ -59,7 +58,6 @@ export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance)
                 header?: { kid?: string }
             } | null
 
-            console.log('DECODED JWT HEADER', decoded?.header)
             const kid = decoded?.header?.kid
 
             if (!kid) {
@@ -72,7 +70,7 @@ export const authPlugin = fp(async function authPlugin(fastify: FastifyInstance)
         },
         verify: {
             clockTolerance: 30, // Tolleranza per disallineamento orari server
-        } as any,
+        },
     })
 
     /**

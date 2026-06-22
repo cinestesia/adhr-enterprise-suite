@@ -4,7 +4,7 @@ export const ChatSessionResponseSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
     title: z.string(),
-    createdAt: z.string(), // Verrà serializzato come stringa ISO
+    createdAt: z.coerce.string(), // Verrà serializzato come stringa ISO
 })
 
 // Schema per l'array di sessioni
