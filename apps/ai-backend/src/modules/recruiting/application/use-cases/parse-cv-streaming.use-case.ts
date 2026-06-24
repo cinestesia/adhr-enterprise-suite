@@ -10,7 +10,7 @@ export class ParseCvStreamingUseCase {
         private cvExtractor: ICvExtractorStreamingPort,
         private candidateRepo: ICandidateRepositoryPort,
         private fileStorage: IFileStoragePort,
-        private docParser: LocalDocumentParserAdapter,
+        private docParser: LocalDocumentParserAdapter, // ciao
         private logger: ILogger
     ) {}
 
