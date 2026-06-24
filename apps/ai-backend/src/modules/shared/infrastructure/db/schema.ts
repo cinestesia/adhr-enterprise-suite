@@ -121,6 +121,14 @@ export const chatFeedbacks = pgTable(
     (table) => [index('msg_feedback_idx').on(table.messageId)]
 )
 
+// Nota: Assicurati che l'import di 'vector' (se proviene da un file custom o estensione) sia presente in cima
+// Nota architetturale futura: Se il volume dei curricula dovesse crescere sensibilmente 
+// (oltre i 10.000/20.000 candidati), potremo aggiungere nell'array degli indici in 
+// fondo allo schema anche gli indici vettoriali HNSW (Hierarchical Navigable Small World) 
+// su entrambe le colonne utilizzando l'operatore di distanza coseno per mantenere 
+// le query sotto i 10 millisecondi. Per adesso, la scansione sequenziale di pgvector 
+// gestirà il carico attuale senza battere ciglio.
+
 export const candidates = pgTable(
     'candidates',
     {
@@ -156,7 +164,11 @@ export const candidates = pgTable(
 
         cvFileUrl: text('cv_file_url').notNull(),
         
+        // 1. Embedding chirurgico (Competenze e ruoli)
         skillsEmbedding: vector('skills_embedding'), 
+
+        // 2. NUOVO: Embedding olistico (Background completo, esperienze narrative e istruzione)
+        profileEmbedding: vector('profile_embedding'), 
 
         createdAt: timestamp('created_at').defaultNow().notNull(),
         updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -7,7 +7,7 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages'
  * @note
  * Adattatore per l'estrazione semantica dei CV in modalità streaming.
  * Sfrutta il metodo .stream() di LangChain per inviare i token in tempo reale
- * al BFF, abbattendo i tempi morti di attesa (HTTP 408 Timeout) su CPU.
+ * al BFF, abbattendo i tempi morti di attesa (HTTP 408 Timeout) su CPU..
  */
 export class OllamaCvExtractorStreamingAdapter implements ICvExtractorStreamingPort {
     private model: ChatOpenAI
